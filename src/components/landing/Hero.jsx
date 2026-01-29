@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Terminal, Cpu, Database, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const Hero = () => {
@@ -60,24 +61,24 @@ const Hero = () => {
                     className="mb-8"
                 >
                     {/* Icon Placeholder */}
-                    <div className="w-12 h-12 mb-6 text-white">
+                    <div className="w-12 h-12 mb-6 text-text-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full">
                             <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
                             <line x1="12" y1="2" x2="12" y2="12" />
                         </svg>
                     </div>
 
-                    <h1 className="text-5xl font-bold leading-tight mb-6 text-white">
+                    <h1 className="text-5xl font-bold leading-tight mb-6 text-text-primary">
                         Stop guessing where to start.
                     </h1>
                     <p className="text-xl text-text-secondary mb-8">
                         Get personalized AI-powered feedback on your code and a roadmap to mastery.
                     </p>
                     <div className="flex gap-4">
-                        <button className="px-8 py-4 bg-accent text-primary font-bold rounded-xl hover:brightness-110 transition-all shadow-lg shadow-accent/20">
+                        <Link to="/auth" className="px-8 py-4 bg-accent text-primary font-bold rounded-xl hover:brightness-110 transition-all shadow-lg shadow-accent/20 inline-block text-center">
                             Get Started Free
-                        </button>
-                        <button className="px-8 py-4 border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-all">
+                        </Link>
+                        <button className="px-8 py-4 border border-border text-text-primary font-bold rounded-xl hover:bg-text-primary/5 transition-all">
                             View Demo
                         </button>
                     </div>
@@ -128,7 +129,7 @@ const Hero = () => {
 
                 {/* Slider Navigation */}
                 <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
-                    <button onClick={prevSlide} className="p-2 rounded-full border border-white/10 hover:bg-white/5 text-text-secondary hover:text-white transition-colors">
+                    <button onClick={prevSlide} className="p-2 rounded-full border border-white/10 hover:bg-white/5 text-text-secondary hover:text-text-primary transition-colors">
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <div className="flex gap-2">
@@ -136,11 +137,11 @@ const Hero = () => {
                             <button
                                 key={i}
                                 onClick={() => setCurrentSlide(i)}
-                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === i ? 'w-6 bg-accent' : 'bg-white/20 hover:bg-white/40'}`}
+                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === i ? 'w-6 bg-accent' : 'bg-text-primary/20 hover:bg-text-primary/40'}`}
                             ></button>
                         ))}
                     </div>
-                    <button onClick={nextSlide} className="p-2 rounded-full border border-white/10 hover:bg-white/5 text-text-secondary hover:text-white transition-colors">
+                    <button onClick={nextSlide} className="p-2 rounded-full border border-white/10 hover:bg-white/5 text-text-secondary hover:text-text-primary transition-colors">
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>

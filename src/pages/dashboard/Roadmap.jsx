@@ -9,7 +9,7 @@ const Roadmap = () => {
     const roadmaps = [
         { id: 1, title: 'C++', status: 'Excellent', date: 'Jan 28, 2025', color: 'from-blue-500 to-cyan-500', progress: 85, icon: Code },
         { id: 2, title: 'Python', status: 'Good', date: 'Jan 20, 2025', color: 'from-green-500 to-emerald-500', progress: 60, icon: Terminal },
-        { id: 3, title: 'C#', status: 'Excellent', date: 'Jan 15, 2025', color: 'from-purple-500 to-pink-500', progress: 90, icon: FileCode },
+        { id: 3, title: 'C#', status: 'Excellent', date: 'Jan 15, 2025', color: 'from-purple to-purple', progress: 90, icon: FileCode },
         { id: 4, title: 'JavaScript', status: 'Excellent', date: 'Jan 12, 2025', color: 'from-orange-500 to-yellow-500', progress: 40, icon: Layout },
     ];
 
@@ -113,7 +113,7 @@ const Roadmap = () => {
                 {activeTab === 'detail' && (
                     <button
                         onClick={() => setActiveTab('list')}
-                        className="flex items-center gap-2 text-sm text-text-secondary hover:text-white transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
+                        className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
                     >
                         <ArrowLeft className="w-4 h-4" /> Back to list
                     </button>
@@ -136,25 +136,25 @@ const Roadmap = () => {
                         {roadmaps.map((map) => (
                             <div
                                 key={map.id}
-                                className="group relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.01] bg-secondary border border-border hover:brightness-110"
+                                className="group relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.01] bg-secondary border border-border hover:shadow-lg"
                                 onClick={() => setActiveTab('detail')}
                             >
                                 {/* Gradient Bottom Border */}
-                                <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r ${map.color}`}></div>
+                                <div className={`absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r ${map.color} opacity-80`}></div>
 
                                 <div className="relative p-5 flex items-center justify-between z-10">
                                     <div className="flex items-center gap-4">
                                         {/* Circular Icon Badge */}
                                         <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${map.color} p-[2px] shadow-lg flex-shrink-0`}>
-                                            <div className="w-full h-full rounded-full bg-secondary flex items-center justify-center">
-                                                <map.icon className="w-6 h-6 text-white" />
+                                            <div className="w-full h-full rounded-full bg-gray-200 group-hover:bg-gray-300 dark:bg-secondary dark:group-hover:bg-secondary border border-border flex items-center justify-center transition-colors">
+                                                <map.icon className="w-6 h-6 text-text-primary dark:text-white" />
                                             </div>
                                         </div>
 
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
-                                                <h3 className="font-bold text-text-primary text-xl">{map.title}</h3>
-                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${map.status === 'Excellent' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`}>
+                                                <h3 className="font-bold text-text-primary text-xl underline decoration-2 underline-offset-4 decoration-border group-hover:decoration-accent transition-colors">{map.title}</h3>
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${map.status === 'Excellent' ? 'bg-green-500/10 border-green-500/20 text-green-400 group-hover:bg-green-500/20' : 'bg-blue-500/10 border-blue-500/20 text-blue-400 group-hover:bg-blue-500/20'}`}>
                                                     {map.status}
                                                 </span>
                                             </div>
@@ -167,7 +167,7 @@ const Roadmap = () => {
                                     </div>
 
                                     <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                                        <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white" />
+                                        <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-text-primary" />
                                     </div>
                                 </div>
                             </div>

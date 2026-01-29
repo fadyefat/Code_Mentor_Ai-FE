@@ -10,11 +10,11 @@ const FeatureSection = ({ title, description, icon: Icon, imageContent, reversed
 
             <div className={`w-1/2 ${reversed ? 'pl-20' : 'pr-20'}`}>
                 {Icon && (
-                    <div className="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center mb-6">
-                        <Icon className="w-8 h-8 text-white" />
+                    <div className="w-16 h-16 bg-text-primary/10 rounded-xl flex items-center justify-center mb-6">
+                        <Icon className="w-8 h-8 text-text-primary" />
                     </div>
                 )}
-                <h2 className="text-3xl font-bold text-white mb-6 leading-relaxed">
+                <h2 className="text-3xl font-bold text-text-primary mb-6 leading-relaxed">
                     {title}
                 </h2>
                 <p className="text-text-secondary text-lg leading-relaxed">

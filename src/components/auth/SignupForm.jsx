@@ -4,13 +4,13 @@ import { Facebook, Instagram, Github, X } from 'lucide-react';
 const SignupForm = () => {
     return (
         <div className="flex flex-col items-center justify-center p-8 h-full w-full text-center">
-            <h2 className="text-3xl font-bold mb-6 text-white">REGISTER</h2>
+            <h2 className="text-3xl font-bold mb-6 text-text-primary">REGISTER</h2>
 
             <div className="flex gap-4 mb-8">
-                <a href="#" className="p-3 border border-white/20 rounded-xl hover:bg-white/10 transition-colors"><Facebook className="w-6 h-6 text-white" /></a>
-                <a href="#" className="p-3 border border-white/20 rounded-xl hover:bg-white/10 transition-colors"><Instagram className="w-6 h-6 text-white" /></a>
-                <a href="#" className="p-3 border border-white/20 rounded-xl hover:bg-white/10 transition-colors"><X className="w-6 h-6 text-white" /></a>
-                <a href="#" className="p-3 border border-white/20 rounded-xl hover:bg-white/10 transition-colors"><Github className="w-6 h-6 text-white" /></a>
+                <a href="#" className="p-3 border border-border rounded-xl hover:bg-white/10 transition-colors"><Facebook className="w-6 h-6 text-text-primary" /></a>
+                <a href="#" className="p-3 border border-border rounded-xl hover:bg-white/10 transition-colors"><Instagram className="w-6 h-6 text-text-primary" /></a>
+                <a href="#" className="p-3 border border-border rounded-xl hover:bg-white/10 transition-colors"><X className="w-6 h-6 text-text-primary" /></a>
+                <a href="#" className="p-3 border border-border rounded-xl hover:bg-white/10 transition-colors"><Github className="w-6 h-6 text-text-primary" /></a>
             </div>
 
             <p className="text-text-secondary text-sm mb-4">or use your email for registration</p>
@@ -19,17 +19,17 @@ const SignupForm = () => {
                 <input
                     type="text"
                     placeholder="Name"
-                    className="w-full bg-secondary/50 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-text-secondary focus:outline-none focus:border-accent transition-colors text-lg"
+                    className="w-full bg-secondary border border-border rounded-xl px-5 py-4 text-text-primary placeholder-text-secondary focus:outline-none focus:border-accent transition-colors text-lg"
                 />
                 <input
                     type="email"
                     placeholder="Email"
-                    className="w-full bg-secondary/50 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-text-secondary focus:outline-none focus:border-accent transition-colors text-lg"
+                    className="w-full bg-secondary border border-border rounded-xl px-5 py-4 text-text-primary placeholder-text-secondary focus:outline-none focus:border-accent transition-colors text-lg"
                 />
                 <input
                     type="password"
                     placeholder="Password"
-                    className="w-full bg-secondary/50 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-text-secondary focus:outline-none focus:border-accent transition-colors text-lg"
+                    className="w-full bg-secondary border border-border rounded-xl px-5 py-4 text-text-primary placeholder-text-secondary focus:outline-none focus:border-accent transition-colors text-lg"
                 />
 
                 <button

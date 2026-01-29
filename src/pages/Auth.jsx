@@ -58,7 +58,7 @@ const Auth = () => {
                 <div
                     className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-700 ease-in-out z-50 rounded-l-[20px] ${isLogin ? 'translate-x-0 rounded-l-[20px]' : '-translate-x-full rounded-r-[20px] rounded-l-0'}`}
                 >
-                    <div className={`bg-primary h-full w-[200%] text-white relative -left-full flex items-center justify-center transition-transform duration-700 ease-in-out ${isLogin ? 'translate-x-[50%]' : 'translate-x-0'}`}>
+                    <div className={`bg-gray-900 h-full w-[200%] text-white relative -left-full flex items-center justify-center transition-transform duration-700 ease-in-out ${isLogin ? 'translate-x-[50%]' : 'translate-x-0'}`}>
 
                         {/* Panel 1 (Left Side of Wrapper) - Shows "Register" message when Login is active */}
                         <div className="w-1/2 h-full flex flex-col items-center justify-center px-10 text-center">

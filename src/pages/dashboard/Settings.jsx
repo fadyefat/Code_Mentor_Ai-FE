@@ -21,7 +21,7 @@ const Settings = () => {
                 <Section title="Appearance">
                     <div className="flex items-center justify-between">
                         <span className="text-text-secondary">Theme</span>
-                        <div className="flex bg-primary rounded-lg p-1 border border-white/10">
+                        <div className="flex bg-primary rounded-lg p-1 border border-border">
                             <button
                                 onClick={() => theme === 'light' && toggleTheme()}
                                 className={`px-4 py-1.5 rounded-md text-sm transition-all ${theme === 'dark' ? 'bg-secondary text-text-primary shadow' : 'text-text-secondary hover:text-text-primary'}`}>
@@ -29,7 +29,7 @@ const Settings = () => {
                             </button>
                             <button
                                 onClick={() => theme === 'dark' && toggleTheme()}
-                                className={`px-4 py-1.5 rounded-md text-sm transition-all ${theme === 'light' ? 'bg-white text-primary shadow' : 'text-text-secondary hover:text-text-primary'}`}>
+                                className={`px-4 py-1.5 rounded-md text-sm transition-all ${theme === 'light' ? 'bg-white text-text-primary shadow' : 'text-text-secondary hover:text-text-primary'}`}>
                                 Light
                             </button>
                         </div>
@@ -93,7 +93,7 @@ const Toggle = ({ label, description, defaultChecked }) => {
             </div>
             <button
                 onClick={() => setChecked(!checked)}
-                className={`w-11 h-6 rounded-full relative transition-colors ${checked ? 'bg-accent' : 'bg-white/20'}`}
+                className={`w-11 h-6 rounded-full relative transition-colors ${checked ? 'bg-accent' : 'bg-border'}`}
             >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${checked ? 'left-6' : 'left-1'}`}></div>
             </button>

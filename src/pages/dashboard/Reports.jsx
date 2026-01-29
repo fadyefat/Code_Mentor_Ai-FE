@@ -57,7 +57,7 @@ const Reports = () => {
             date: 'Jan 15, 2025',
             score: 78,
             status: 'Good',
-            color: 'from-purple-500 to-pink-500',
+            color: 'from-purple to-purple',
             icon: FileCode,
             quality: { readability: 80, maintainability: 75, efficiency: 82 },
             issues: { critical: 1, warnings: 5, suggestions: 8 },
@@ -112,7 +112,7 @@ const Reports = () => {
                         <div
                             key={report.id}
                             onClick={() => setSelectedReportId(report.id)}
-                            className={`group relative p-4 rounded-xl cursor-pointer transition-all duration-300 overflow-hidden bg-secondary border hover:brightness-110 ${selectedReportId === report.id ? 'border-border' : 'border-transparent'}`}
+                            className={`group relative p-4 rounded-xl cursor-pointer transition-all duration-300 overflow-hidden bg-secondary border hover:bg-text-primary/5 ${selectedReportId === report.id ? 'border-border' : 'border-transparent'}`}
                         >
                             {/* Bottom Gradient Border */}
                             <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r ${report.color}`}></div>
@@ -125,13 +125,13 @@ const Reports = () => {
                                     {/* Icon Badge */}
                                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${report.color} p-[1px] shadow-lg`}>
                                         <div className="w-full h-full bg-secondary rounded-xl flex items-center justify-center">
-                                            <report.icon className="w-6 h-6 text-white" />
+                                            <report.icon className="w-6 h-6 text-text-primary" />
                                         </div>
                                     </div>
 
                                     <div>
                                         <div className="flex items-center gap-3">
-                                            <h3 className="font-bold text-text-primary text-lg tracking-wide">{report.language}</h3>
+                                            <h3 className="font-bold text-text-primary text-lg tracking-wide group-hover:underline decoration-2 underline-offset-4 decoration-accent transition-all">{report.language}</h3>
                                             <span className={`text-[10px] px-2 py-0.5 rounded-full border border-white/10 ${report.status === 'Excellent' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
                                                 {report.status}
                                             </span>
@@ -145,7 +145,7 @@ const Reports = () => {
                                 </div>
 
                                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                                    <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white" />
+                                    <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-text-primary" />
                                 </div>
                             </div>
                         </div>
@@ -195,8 +195,8 @@ const Reports = () => {
                     <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
                         <h3 className="text-text-primary font-bold mb-6">Code Quality</h3>
                         <div className="space-y-6">
-                            <SkillBar label="Readability" percentage={selectedReport.quality.readability} color="bg-blue-500" />
-                            <SkillBar label="Maintainability" percentage={selectedReport.quality.maintainability} color="bg-purple-500" />
+                            <SkillBar label="Readability" percentage={selectedReport.quality.readability} color="bg-blue-600" />
+                            <SkillBar label="Maintainability" percentage={selectedReport.quality.maintainability} color="bg-purple" />
                             <SkillBar label="Efficiency" percentage={selectedReport.quality.efficiency} color="bg-accent" />
                         </div>
                     </div>
@@ -262,7 +262,7 @@ const SkillBar = ({ label, percentage, color }) => (
             <span className="text-text-secondary">{label}</span>
             <span className="text-text-primary">{percentage}%</span>
         </div>
-        <div className="w-full bg-primary h-2 rounded-full overflow-hidden">
+        <div className="w-full bg-border h-2 rounded-full overflow-hidden">
             <div className={`h-full ${color} rounded-full`} style={{ width: `${percentage}%` }}></div>
         </div>
     </div>

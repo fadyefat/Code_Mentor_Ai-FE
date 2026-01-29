@@ -107,7 +107,7 @@ const DashboardLayout = () => {
                                     <NavLink
                                         to="/dashboard/reports"
                                         onClick={() => setShowNotifications(false)}
-                                        className="inline-block text-xs text-white border border-white/20 rounded-lg px-4 py-2 hover:bg-white/10 transition-colors"
+                                        className="inline-block text-xs text-text-primary border border-border rounded-lg px-4 py-2 hover:bg-text-primary/5 hover:underline transition-colors"
                                     >
                                         View All Activity
                                     </NavLink>
