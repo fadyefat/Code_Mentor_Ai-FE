@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -22,7 +22,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <ReportProvider>
-          <BrowserRouter basename="/Code_Mentor_Ai-FE">
+          <HashRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
@@ -45,7 +45,7 @@ function App() {
               {/* Catch all - redirect to Landing */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </BrowserRouter>
+          </HashRouter>
         </ReportProvider>
       </AuthProvider>
     </ThemeProvider>
