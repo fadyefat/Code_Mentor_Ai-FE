@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Map, FileText, Settings, Plus, LogOut, Bell, Search, Menu, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Map, FileText, Settings, Plus, LogOut, Bell, Menu, Loader2 } from 'lucide-react';
 // Minimal avatar placeholder or icon
 import { User } from 'lucide-react';
 import { useReports } from '../context/ReportContext';
@@ -87,13 +87,15 @@ const DashboardLayout = () => {
                         </div>
 
                         {/* Logout Tooltip/Menu (Simple) */}
-                        <div className="absolute bottom-full left-0 w-full bg-secondary border border-white/10 rounded-lg p-2 mb-2 hidden group-hover:block z-50">
-                            <button
-                                onClick={handleSignOut}
-                                className="w-full text-left text-sm p-2 hover:bg-white/5 rounded text-red-400 flex items-center gap-2"
-                            >
-                                <LogOut className="w-4 h-4" /> Sign Out
-                            </button>
+                        <div className="absolute bottom-full left-0 w-full pb-2 hidden group-hover:block z-50">
+                            <div className="bg-secondary border border-white/10 rounded-lg p-2 shadow-xl">
+                                <button
+                                    onClick={handleSignOut}
+                                    className="w-full text-left text-sm p-2 hover:bg-white/5 rounded text-red-400 flex items-center gap-2"
+                                >
+                                    <LogOut className="w-4 h-4" /> Sign Out
+                                </button>
+                            </div>
                         </div>
                     </NavLink>
                 </div>
@@ -108,16 +110,7 @@ const DashboardLayout = () => {
                         <Menu className="w-6 h-6" />
                     </button>
 
-                    <div className="relative w-96 hidden md:block">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="w-full bg-primary border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-4 relative">
+                    <div className="flex items-center gap-4 relative ml-auto">
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
                             className="relative p-2 hover:bg-white/5 rounded-full transition-colors"

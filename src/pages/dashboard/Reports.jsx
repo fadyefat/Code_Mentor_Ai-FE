@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Zap, FileCode, Activity, Eye, Calendar, Code, CheckCircle, AlertTriangle, XCircle, Terminal, Lightbulb, ChevronRight, FileDiff } from 'lucide-react';
+import { Zap, FileCode, Activity, Eye, Calendar, Code, CheckCircle, AlertTriangle, XCircle, Terminal, Lightbulb, ChevronRight, FileDiff, Search } from 'lucide-react';
 import { useReports } from '../../context/ReportContext';
 import { getIconByName, formatReportData } from '../../utils/reportUtils';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -8,8 +8,14 @@ const Reports = () => {
     const { reports, isLoading, addReport, refreshReports } = useReports(); // Added refreshReports
     const [selectedReportId, setSelectedReportId] = useState(null);
     const [activeTab, setActiveTab] = useState('source');
+    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
+
+    const filteredReports = reports.filter(r =>
+        r.language?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     // 1. Synchronously Derive Local State on First Render
     // This runs BEFORE any useEffect, preventing the "Loading" flash.
@@ -57,15 +63,15 @@ const Reports = () => {
     }, [directData, addReport, navigate, location.pathname]);
 
     // 2. Determine which report to show
-    // Priority: Local Report -> Selected Report -> First Report
-    const displayReport = localReport || reports.find(r => r.id === selectedReportId) || reports[0];
+    // Priority: Local Report -> Selected Report -> First Filtered Report -> First Report
+    const displayReport = localReport || reports.find(r => r.id === selectedReportId) || filteredReports[0] || reports[0];
 
     // Effect: If we don't have a local report, select the first one from context when it loads
     useEffect(() => {
-        if (!localReport && reports && reports.length > 0 && !selectedReportId) {
-            setSelectedReportId(reports[0].id);
+        if (!localReport && filteredReports && filteredReports.length > 0 && !selectedReportId) {
+            setSelectedReportId(filteredReports[0].id);
         }
-    }, [reports, selectedReportId, localReport]);
+    }, [filteredReports, selectedReportId, localReport]);
 
     // Handle sidebar click
     const handleReportClick = (id) => {
@@ -127,8 +133,20 @@ const Reports = () => {
                     <p className="text-text-secondary text-sm">Your generated analysis reports</p>
                 </div>
 
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                    <input
+                        type="text"
+                        placeholder="Search your code reports"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-xl py-4 pl-12 pr-4 text-text-primary focus:border-accent outline-none placeholder:text-text-secondary/50 transition-all"
+                    />
+                </div>
+
                 <div className="space-y-4">
-                    {reports.map((report) => {
+                    {filteredReports.map((report) => {
                         const ReportIcon = getIconByName(report.iconName);
                         return (
                             <div

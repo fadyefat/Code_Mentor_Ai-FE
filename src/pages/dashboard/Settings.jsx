@@ -53,10 +53,6 @@ const Settings = () => {
 
                 {/* Privacy */}
                 <Section title="Privacy & Security">
-                    <div className="flex items-center justify-between">
-                        <span className="text-text-secondary">Profile Visibility</span>
-                        <span className="text-sm text-accent bg-accent/10 px-2 py-1 rounded">Public</span>
-                    </div>
                     <div className="mt-4">
                         <Toggle label="Two-Factor Authentication" description="Enable 2FA for extra security" />
                     </div>
@@ -65,8 +61,6 @@ const Settings = () => {
                 {/* Account Actions */}
                 <Section title="Account Actions">
                     <div className="space-y-3">
-                        <button className="w-full text-left px-4 py-3 bg-white/5 rounded-lg text-text-primary hover:bg-white/10 transition-colors text-sm">User Role</button>
-                        <button className="w-full text-left px-4 py-3 bg-white/5 rounded-lg text-text-primary hover:bg-white/10 transition-colors text-sm">Your Rights</button>
                         <button className="w-full text-left px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 hover:bg-red-500/20 transition-colors text-sm font-medium">Delete Account</button>
                     </div>
                 </Section>
