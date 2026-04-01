@@ -66,14 +66,82 @@ const Profile = () => {
         avatar: profile?.avatar_url || null
     };
 
-    // Static Data (Placeholders until DB schema is live)
-    const skills = [
-        { name: "JavaScript", progress: 90, color: "bg-blue-400" },
-        { name: "React", progress: 85, color: "bg-cyan-400" },
-        { name: "Python", progress: 75, color: "bg-yellow-400" },
-        { name: "CSS", progress: 83, color: "bg-pink-400" },
-        { name: "Node.js", progress: 70, color: "bg-green-400" },
-    ];
+    const derivedSkills = useMemo(() => {
+        if (!reports || reports.length === 0) return [];
+        
+        const skillMap = {};
+        reports.forEach(r => {
+            if (!r.language || r.language === 'Not detected') return;
+            const lang = r.language;
+            const score = Math.round(Number(r.score) || 0);
+            if (!skillMap[lang] || score > skillMap[lang]) {
+                skillMap[lang] = score;
+            }
+        });
+
+        const colors = ["bg-blue-400", "bg-yellow-400", "bg-cyan-400", "bg-green-400", "bg-pink-400", "bg-purple-400", "bg-orange-400"];
+        
+        return Object.entries(skillMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([name, progress], index) => ({
+                name,
+                progress,
+                color: colors[index % colors.length]
+            }));
+    }, [reports]);
+
+    const derivedAchievements = useMemo(() => {
+        if (!reports || reports.length === 0) return [];
+        
+        const achieves = [];
+        
+        // 1. First Review
+        achieves.push({
+            title: "First Review",
+            date: reports[reports.length - 1]?.date || "Just now",
+            icon: Trophy,
+            color: "text-red-500",
+            bg: "bg-red-500/20"
+        });
+
+        // 2. Consistent Coder
+        if (reports.length >= 5) {
+            achieves.push({
+                title: "5+ Submissions",
+                date: reports[reports.length - 5]?.date || "Recently",
+                icon: Trophy,
+                color: "text-yellow-500",
+                bg: "bg-yellow-500/20"
+            });
+        }
+
+        // 3. Excellence
+        const excellentReport = reports.find(r => r.status === 'Excellent' || r.score >= 90);
+        if (excellentReport) {
+            achieves.push({
+                title: "Excellence",
+                date: excellentReport.date,
+                icon: Trophy,
+                color: "text-green-500",
+                bg: "bg-green-500/20"
+            });
+        }
+
+        // 4. Language Master
+        const masterReport = reports.find(r => r.score >= 95);
+        if (masterReport) {
+            achieves.push({
+                title: `${masterReport.language} Master`,
+                date: masterReport.date,
+                icon: Trophy,
+                color: "text-purple-500",
+                bg: "bg-purple-500/20"
+            });
+        }
+        
+        return achieves.slice(0, 4);
+    }, [reports]);
 
     if (loading || authLoading) {
         return (
@@ -151,22 +219,30 @@ const Profile = () => {
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-text-primary">Technical Skills</h3>
                         </div>
-                        <div className="space-y-4">
-                            {skills.map((skill, index) => (
-                                <div key={index}>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-sm font-medium text-text-primary">{skill.name}</span>
-                                        <span className="text-sm text-text-secondary">{skill.progress}%</span>
+                        {derivedSkills.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-8 text-center bg-primary/20 rounded-xl border border-white/5">
+                                <Code className="w-10 h-10 text-text-secondary opacity-50 mb-3" />
+                                <h4 className="text-text-primary font-medium mb-1">Awaiting Data</h4>
+                                <p className="text-xs text-text-secondary max-w-[200px] mx-auto">Waiting for your first report. Submit code to generate your technical skill profile!</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {derivedSkills.map((skill, index) => (
+                                    <div key={index}>
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-sm font-medium text-text-primary">{skill.name}</span>
+                                            <span className="text-sm text-text-secondary">{skill.progress}%</span>
+                                        </div>
+                                        <div className="w-full bg-primary rounded-full h-2">
+                                            <div
+                                                className={`${skill.color} h-2 rounded-full transition-all duration-1000`}
+                                                style={{ width: `${skill.progress}%` }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="w-full bg-primary rounded-full h-2">
-                                        <div
-                                            className={`${skill.color} h-2 rounded-full transition-all duration-1000`}
-                                            style={{ width: `${skill.progress}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Additional Info Block (About/Socials) Merged */}
@@ -201,36 +277,25 @@ const Profile = () => {
                     <div className="bg-secondary/50 backdrop-blur border border-border p-6 rounded-xl flex flex-col">
                         <h3 className="text-lg font-bold text-text-primary mb-6">Achievements</h3>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">First Review</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 2, 2025</p>
+                        {derivedAchievements.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-8 text-center bg-primary/20 rounded-xl border border-white/5 flex-1 min-h-[200px]">
+                                <Trophy className="w-10 h-10 text-text-secondary opacity-50 mb-3" />
+                                <h4 className="text-text-primary font-medium mb-1">No Achievements Yet</h4>
+                                <p className="text-xs text-text-secondary">Submit your first code to start unlocking achievements!</p>
                             </div>
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">JS Master</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 10, 2025</p>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4">
+                                {derivedAchievements.map((achieve, idx) => (
+                                    <div key={idx} className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
+                                        <div className={`w-10 h-10 ${achieve.bg} rounded-full flex items-center justify-center ${achieve.color} mb-2`}>
+                                            <achieve.icon className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-text-primary text-sm">{achieve.title}</h4>
+                                        <p className="text-xs text-text-secondary mt-1">{achieve.date}</p>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">30 Day Streak</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 15, 2025</p>
-                            </div>
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">React Expert</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 20, 2025</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
