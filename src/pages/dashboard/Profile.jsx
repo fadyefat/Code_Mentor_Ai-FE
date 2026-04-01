@@ -151,11 +151,13 @@ const Profile = () => {
         );
     }
 
+    const masteredCount = derivedSkills.filter(skill => skill.progress >= 95).length;
+
     const stats = [
         { label: "Projects Reviewed", value: statsResult.reviewed, icon: Code, color: "bg-blue-500" },
         { label: "Lines of Code", value: statsResult.lines, icon: Hash, color: "bg-purple-500" },
         { label: "Learning Streak", value: `${profile?.current_streak || 0} days`, icon: Calendar, color: "bg-orange-500" },
-        { label: "Skills Mastered", value: "5", icon: Trophy, color: "bg-green-500" }, // Mock for now
+        { label: "Skills Mastered", value: masteredCount, icon: Trophy, color: "bg-green-500" },
     ];
 
     return (
@@ -245,31 +247,7 @@ const Profile = () => {
                         )}
                     </div>
 
-                    {/* Additional Info Block (About/Socials) Merged */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-text-primary mb-4">About Me</h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <MapPin className="w-4 h-4 text-accent" /> {displayUser.location}
-                                </div>
-                                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <Mail className="w-4 h-4 text-accent" /> {displayUser.email}
-                                </div>
-                                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <LinkIcon className="w-4 h-4 text-accent" /> {displayUser.website}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-text-primary mb-4">Socials</h3>
-                            <div className="flex gap-4">
-                                <a href="#" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-text-primary transition-colors"><Github className="w-5 h-5" /></a>
-                                <a href="#" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-blue-400 transition-colors"><Twitter className="w-5 h-5" /></a>
-                                <a href="#" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-blue-600 transition-colors"><Linkedin className="w-5 h-5" /></a>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Additional Info Block Removed per request */}
                 </div>
 
                 {/* Right Column: Achievements (from Home) */}
