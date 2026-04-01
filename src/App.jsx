@@ -22,7 +22,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <ReportProvider>
-          <BrowserRouter basename="/Code_Mentor_Ai-FE">
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
