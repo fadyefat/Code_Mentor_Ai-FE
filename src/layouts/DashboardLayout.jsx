@@ -48,10 +48,9 @@ const DashboardLayout = () => {
         <div className="flex h-screen bg-primary text-text-primary overflow-hidden">
 
             {/* Sidebar */}
-            <aside className="w-64 bg-secondary border-r border-white/5 flex flex-col hidden md:flex">
-                <div className="p-6 border-b border-white/5 flex items-center justify-center">
-                    <Link to="/dashboard" className="block select-none hover:opacity-80 transition-opacity">
-                        <img src="/logo.png" alt="CodeMentor AI" className="h-12 md:h-14 w-auto object-contain" />
+                <div className="p-2 border-b border-white/5 overflow-hidden flex items-center justify-center">
+                    <Link to="/dashboard" className="block select-none hover:opacity-80 transition-opacity w-full flex justify-center">
+                        <img src="/logo.png" alt="CodeMentor AI" className="w-[180px] h-auto object-contain transform scale-[1.7] origin-center" />
                     </Link>
                 </div>
 
