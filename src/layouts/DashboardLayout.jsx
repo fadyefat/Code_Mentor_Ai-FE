@@ -49,11 +49,10 @@ const DashboardLayout = () => {
 
             {/* Sidebar */}
             <aside className="w-64 bg-secondary border-r border-white/5 flex flex-col hidden md:flex">
-                <div className="p-6 border-b border-white/5">
-                    {/* Logo - User requested "Do Nothing" if logged in */}
-                    <div className="cursor-default select-none">
-                        <h1 className="text-xl font-bold text-accent">CodeMentor AI</h1>
-                    </div>
+                <div className="p-6 border-b border-white/5 flex items-center justify-center">
+                    <Link to="/dashboard" className="block select-none hover:opacity-80 transition-opacity">
+                        <img src="/logo.png" alt="CodeMentor AI" className="h-8 w-auto object-contain" />
+                    </Link>
                 </div>
 
                 <div className="p-4">
