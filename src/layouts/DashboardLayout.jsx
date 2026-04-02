@@ -51,7 +51,7 @@ const DashboardLayout = () => {
             <aside className="w-64 bg-secondary border-r border-white/5 flex flex-col hidden md:flex">
                 <div className="p-6 border-b border-white/5 flex items-center justify-center">
                     <Link to="/dashboard" className="block select-none hover:opacity-80 transition-opacity">
-                        <img src="/logo.png" alt="CodeMentor AI" className="h-8 w-auto object-contain" />
+                        <img src="/logo.png" alt="CodeMentor AI" className="h-12 md:h-14 w-auto object-contain" />
                     </Link>
                 </div>
 
