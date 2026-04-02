@@ -72,7 +72,10 @@ const Profile = () => {
         const skillMap = {};
         reports.forEach(r => {
             if (!r.language || r.language === 'Not detected') return;
-            const lang = r.language;
+            // Normalize casing (e.g. "python" and "Python" -> "Python")
+            const rawLang = r.language.trim();
+            const lang = rawLang.charAt(0).toUpperCase() + rawLang.slice(1).toLowerCase();
+            
             const score = Math.round(Number(r.score) || 0);
             if (!skillMap[lang] || score > skillMap[lang]) {
                 skillMap[lang] = score;
