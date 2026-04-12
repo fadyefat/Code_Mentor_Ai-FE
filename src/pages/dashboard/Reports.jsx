@@ -175,6 +175,11 @@ const Reports = () => {
                                                 <span className={`text-[10px] px-2 py-0.5 rounded-full border border-white/10 ${report.status === 'Excellent' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
                                                     {report.status}
                                                 </span>
+                                                {report.difficulty && (
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border border-white/10 ${report.difficulty.toLowerCase() === 'hard' ? 'bg-red-500/20 text-red-400' : report.difficulty.toLowerCase() === 'medium' ? 'bg-yellow-500/20 text-yellow-400' : report.difficulty.toLowerCase() === 'easy' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/70'}`}>
+                                                        {report.difficulty}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 text-xs text-text-secondary mt-1">
                                                 <span>{report.title}</span>
@@ -210,13 +215,19 @@ const Reports = () => {
                             <p className="text-white/80">{selectedReport.title}</p>
                             {selectedReport.sub_title && <p className="text-white/60 text-sm mt-1">{selectedReport.sub_title}</p>}
 
-                            <div className="flex gap-6 mt-6">
+                            <div className="flex flex-wrap gap-6 mt-6">
                                 <div className="flex items-center gap-2 text-sm font-medium">
                                     <Calendar className="w-4 h-4" /> {selectedReport.date}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm font-medium">
                                     <Code className="w-4 h-4" /> Score: {selectedReport.score}%
                                 </div>
+                                {selectedReport.difficulty && (
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                        <Activity className="w-4 h-4" /> 
+                                        Difficulty: <span className={`capitalize ${selectedReport.difficulty.toLowerCase() === 'hard' ? 'text-red-400' : selectedReport.difficulty.toLowerCase() === 'medium' ? 'text-yellow-400' : selectedReport.difficulty.toLowerCase() === 'easy' ? 'text-green-400' : 'text-white/80'}`}>{selectedReport.difficulty}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         {/* Circular Score or Visual */}
@@ -251,8 +262,9 @@ const Reports = () => {
                         <h3 className="text-text-primary font-bold mb-6">Issues Found</h3>
                         <div className="space-y-3 mb-6">
                             <IssueItem label="Critical" count={selectedReport.issues?.critical || 0} color="text-red-500" bg="bg-red-500/10" border="border-red-500/20" />
-                            <IssueItem label="Warnings" count={selectedReport.issues?.warnings || 0} color="text-yellow-500" bg="bg-yellow-500/10" border="border-yellow-500/20" />
-                            <IssueItem label="Suggestions" count={selectedReport.issues?.suggestions || 0} color="text-blue-500" bg="bg-blue-500/10" border="border-blue-500/20" />
+                            <IssueItem label="Major" count={selectedReport.issues?.major || 0} color="text-orange-500" bg="bg-orange-500/10" border="border-orange-500/20" />
+                            <IssueItem label="Medium" count={selectedReport.issues?.medium || 0} color="text-yellow-500" bg="bg-yellow-500/10" border="border-yellow-500/20" />
+                            <IssueItem label="Minor" count={selectedReport.issues?.minor || 0} color="text-blue-500" bg="bg-blue-500/10" border="border-blue-500/20" />
                         </div>
 
                         {/* Detailed Issues List */}
@@ -261,14 +273,18 @@ const Reports = () => {
                                 <h4 className="text-text-secondary text-sm font-semibold mb-3">Detailed Breakdown</h4>
                                 {selectedReport.issues.list.map((issue, idx) => {
                                     const severity = issue.severity?.toLowerCase() || 'minor';
-                                    const isCritical = severity === 'critical' || severity === 'major';
-                                    const isWarning = severity === 'warning' || severity === 'minor';
+                                    const isCritical = severity === 'critical';
+                                    const isMajor = severity === 'major';
+                                    const isMedium = severity === 'medium' || severity === 'warning';
 
-                                    const styles = isCritical
-                                        ? { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', badge: 'border-red-500/30' }
-                                        : isWarning
-                                            ? { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400', badge: 'border-yellow-500/30' }
-                                            : { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', badge: 'border-blue-500/30' };
+                                    let styles = { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', badge: 'border-blue-500/30' };
+                                    if (isCritical) {
+                                        styles = { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', badge: 'border-red-500/30' };
+                                    } else if (isMajor) {
+                                        styles = { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', badge: 'border-orange-500/30' };
+                                    } else if (isMedium) {
+                                        styles = { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400', badge: 'border-yellow-500/30' };
+                                    }
 
                                     return (
                                         <div key={idx} className={`p-4 rounded-xl border flex gap-3 ${styles.bg} ${styles.border}`}>
@@ -276,8 +292,27 @@ const Reports = () => {
                                                 Line {issue.line}
                                             </div>
                                             <div>
-                                                <p className="text-text-primary text-sm font-medium leading-snug">{issue.message}</p>
-                                                <span className="text-xs text-text-secondary capitalize mt-1 block opacity-70">{severity} Issue</span>
+                                                <p className="text-text-primary text-sm font-medium leading-snug mb-1.5">{issue.message}</p>
+                                                <div className="flex items-center flex-wrap gap-2">
+                                                    <span className="text-xs text-text-secondary capitalize opacity-70">{severity} Issue</span>
+                                                    {issue.skill && (() => {
+                                                        const s = issue.skill.toLowerCase();
+                                                        let sColor = 'text-gray-300 bg-gray-500/10 border-gray-500/20';
+                                                        if (s.includes('readability')) sColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+                                                        else if (s.includes('maintainability')) sColor = 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+                                                        else if (s.includes('efficiency')) sColor = 'text-teal-400 bg-teal-500/10 border-teal-500/20';
+                                                        else if (s.includes('problem')) sColor = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+                                                        else if (s.includes('edge')) sColor = 'text-red-400 bg-red-500/10 border-red-500/20';
+                                                        else if (s.includes('correctness')) sColor = 'text-green-400 bg-green-500/10 border-green-500/20';
+                                                        
+                                                        return (
+                                                            <>
+                                                                <span className="text-xs text-text-secondary opacity-50">•</span>
+                                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${sColor} capitalize tracking-wide`}>{issue.skill}</span>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -359,12 +394,23 @@ const Reports = () => {
                                             const lineNum = idx + 1;
                                             const issues = errorLines[lineNum];
                                             if (issues && issues.length > 0) {
-                                                const issue = issues[0];
-                                                const severity = issue.severity?.toLowerCase() || 'minor';
-                                                const isCritical = severity === 'critical' || severity === 'major';
-                                                const isWarning = severity === 'warning' || severity === 'minor';
-                                                const bgClass = isCritical ? 'bg-red-500/20 shadow-[inset_4px_0_0_0_rgba(239,68,68,0.8)]' : isWarning ? 'bg-yellow-500/20 shadow-[inset_4px_0_0_0_rgba(234,179,8,0.8)]' : 'bg-blue-500/20 shadow-[inset_4px_0_0_0_rgba(59,130,246,0.8)]';
-                                                const tipBorder = isCritical ? 'border-red-500/50' : isWarning ? 'border-yellow-500/50' : 'border-blue-500/50';
+                                                const hasCritical = issues.some(iss => iss.severity?.toLowerCase() === 'critical');
+                                                const hasMajor = issues.some(iss => iss.severity?.toLowerCase() === 'major');
+                                                const hasMedium = issues.some(iss => iss.severity?.toLowerCase() === 'medium' || iss.severity?.toLowerCase() === 'warning');
+                                                
+                                                let bgClass = 'bg-blue-500/20 shadow-[inset_4px_0_0_0_rgba(59,130,246,0.8)]';
+                                                let tipBorder = 'border-blue-500/50';
+                                                
+                                                if (hasCritical) {
+                                                    bgClass = 'bg-red-500/20 shadow-[inset_4px_0_0_0_rgba(239,68,68,0.8)]';
+                                                    tipBorder = 'border-red-500/50';
+                                                } else if (hasMajor) {
+                                                    bgClass = 'bg-orange-500/20 shadow-[inset_4px_0_0_0_rgba(249,115,22,0.8)]';
+                                                    tipBorder = 'border-orange-500/50';
+                                                } else if (hasMedium) {
+                                                    bgClass = 'bg-yellow-500/20 shadow-[inset_4px_0_0_0_rgba(234,179,8,0.8)]';
+                                                    tipBorder = 'border-yellow-500/50';
+                                                }
 
                                                 return (
                                                     <div key={idx} className={`group relative flex px-6 py-0.5 my-[1px] hover:bg-white/5 transition-colors ${bgClass}`}>
@@ -372,15 +418,39 @@ const Reports = () => {
                                                         <div className="flex-1 whitespace-pre">{lineText || ' '}</div>
 
                                                         {/* Tooltip */}
-                                                        <div className={`absolute left-16 top-full mt-1 z-50 hidden group-hover:block bg-[#1a2540] border ${tipBorder} p-3 rounded-lg shadow-2xl text-xs w-max max-w-sm text-gray-200`}>
-                                                            {issues.map((iss, i) => (
+                                                        <div className={`absolute left-16 top-full mt-1 z-50 hidden group-hover:block bg-[#1a2540] border ${tipBorder} p-3 rounded-lg shadow-2xl text-xs w-max max-w-sm text-gray-200 z-[60]`}>
+                                                            {issues.map((iss, i) => {
+                                                                const issSev = iss.severity?.toLowerCase() || 'minor';
+                                                                const issCrit = issSev === 'critical';
+                                                                const issMaj = issSev === 'major';
+                                                                const issMed = issSev === 'medium' || issSev === 'warning';
+                                                                const textColor = issCrit ? 'text-red-400' : issMaj ? 'text-orange-400' : issMed ? 'text-yellow-400' : 'text-blue-400';
+                                                                return (
                                                                 <div key={i} className={i !== 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
-                                                                    <div className={`font-bold mb-1 tracking-wider uppercase ${isCritical ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-blue-400'}`}>
-                                                                        {iss.severity} ISSUE
+                                                                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                                                                        <div className={`font-bold tracking-wider uppercase ${textColor}`}>
+                                                                            {iss.severity} ISSUE
+                                                                        </div>
+                                                                        {iss.skill && (() => {
+                                                                            const s = iss.skill.toLowerCase();
+                                                                            let sColor = 'text-gray-300 bg-black/30 border-white/5';
+                                                                            if (s.includes('readability')) sColor = 'text-blue-300 bg-blue-500/20 border-blue-500/30';
+                                                                            else if (s.includes('maintainability')) sColor = 'text-purple-300 bg-purple-500/20 border-purple-500/30';
+                                                                            else if (s.includes('efficiency')) sColor = 'text-teal-300 bg-teal-500/20 border-teal-500/30';
+                                                                            else if (s.includes('problem')) sColor = 'text-orange-300 bg-orange-500/20 border-orange-500/30';
+                                                                            else if (s.includes('edge')) sColor = 'text-red-300 bg-red-500/20 border-red-500/30';
+                                                                            else if (s.includes('correctness')) sColor = 'text-green-300 bg-green-500/20 border-green-500/30';
+                                                                            return (
+                                                                                <>
+                                                                                    <span className="text-gray-500 text-xs">•</span>
+                                                                                    <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${sColor}`}>{iss.skill}</span>
+                                                                                </>
+                                                                            );
+                                                                        })()}
                                                                     </div>
                                                                     <div className="opacity-90 leading-relaxed font-sans">{iss.message}</div>
                                                                 </div>
-                                                            ))}
+                                                            )})}
                                                         </div>
                                                     </div>
                                                 );

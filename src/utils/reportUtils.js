@@ -67,21 +67,47 @@ export const formatReportData = (apiResponse) => {
 
         issues: {
             critical: apiResponse.critical || 0,
-            warnings: apiResponse.warning || 0,
-            suggestions: apiResponse.suggestions || 0,
-            list: (apiResponse.issues || []).map(issue => ({
-                line: issue.line,
-                severity: issue.severity,
-                message: issue.message
-            }))
+            major: apiResponse.major || 0,
+            medium: apiResponse.medium || apiResponse.warning || 0,
+            minor: apiResponse.minor || apiResponse.suggestions || 0,
+            list: (apiResponse.issues || []).map(issue => {
+                let foundSkill = issue.skill || issue.category || issue.type || issue.metric || issue.affected_metric || issue.associated_skill || issue.related_skill || issue.code_quality || '';
+                
+                if (!foundSkill || foundSkill.toLowerCase() === 'syntax error') {
+                    // Deep scan object values for any of the known skill names
+                    const possibleSkills = ['readability', 'maintainability', 'efficiency', 'problem solving', 'edge cases', 'correctness'];
+                    for (const key of Object.keys(issue)) {
+                        const val = issue[key];
+                        if (typeof val === 'string') {
+                            const lowerVal = val.toLowerCase();
+                            const matched = possibleSkills.find(s => lowerVal.includes(s));
+                            if (matched && key !== 'message') {
+                                foundSkill = val;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                return {
+                    line: issue.line,
+                    severity: issue.severity,
+                    message: issue.message,
+                    skill: foundSkill
+                };
+            })
         },
         snippet: apiResponse.submitted_solution || apiResponse.solution_code || apiResponse.code || apiResponse.user_code || apiResponse.solution || apiResponse.snippet || '', // User's code
         problem_desc: apiResponse.submitted_problem || apiResponse.problem_code || apiResponse.problem || apiResponse.problem_desc || '', // The problem description
         suggested_solution: apiResponse.suggested_solution || apiResponse.corrected_code || apiResponse.ai_code || apiResponse.suggestion || '',
         diff_view: apiResponse.diff_view || apiResponse.diff || apiResponse.corrected_code || '',
-        recommendations: apiResponse.recommendations || [],
+        recommendations: [
+            ...(Array.isArray(apiResponse.recommendations) ? apiResponse.recommendations : (typeof apiResponse.recommendations === 'string' ? [apiResponse.recommendations] : [])),
+            ...(Array.isArray(apiResponse.suggestions) ? apiResponse.suggestions : (typeof apiResponse.suggestions === 'string' ? [apiResponse.suggestions] : []))
+        ],
         search_topics: apiResponse.search_topics || [],
-        roadmap: apiResponse.roadmap || null
+        roadmap: apiResponse.roadmap || null,
+        difficulty: apiResponse.difficulty || apiResponse.problem_difficulty || ''
     };
 
     return formatted;
