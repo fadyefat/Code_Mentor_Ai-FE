@@ -226,7 +226,7 @@ const Reports = () => {
                                 {selectedReport.difficulty && (
                                     <div className="flex items-center gap-2 text-sm font-medium">
                                         <Activity className="w-4 h-4" /> 
-                                        Difficulty: <span className={`capitalize ${selectedReport.difficulty.toLowerCase() === 'hard' ? 'text-red-400' : selectedReport.difficulty.toLowerCase() === 'medium' ? 'text-yellow-400' : selectedReport.difficulty.toLowerCase() === 'easy' ? 'text-green-400' : 'text-white/80'}`}>{selectedReport.difficulty}</span>
+                                        Difficulty: <span className="capitalize bg-white/20 text-white px-2 py-0.5 rounded-md ml-1 font-semibold shadow-sm tracking-wide">{selectedReport.difficulty}</span>
                                     </div>
                                 )}
                             </div>
