@@ -142,15 +142,6 @@ export const ReportProvider = ({ children }) => {
                 // 3. Replace the optimistic report with the real one from DB (with correct UUID)
                 finalReport = formatReportData(insertedData);
                 setReports(prev => prev.map(r => r.id === optimisticId ? finalReport : r));
-                
-                // Emitting the push notification
-                if (addNotification) {
-                    addNotification({
-                        title: 'Report Generated',
-                        message: `Your ${finalReport.language} code analysis has been completed!`,
-                        route: '/dashboard/reports'
-                    });
-                }
             }
         } catch (err) {
             console.error("[ReportContext] Persistence Failed:", err);

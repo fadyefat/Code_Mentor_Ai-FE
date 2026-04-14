@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useReports } from '../../context/ReportContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { Upload, Play, Loader2, AlertCircle } from 'lucide-react';
 import { fetchWithRetry } from '../../utils/apiRetry';
 
 const Submit = () => {
     const { session } = useAuth();
+    const { addNotification } = useNotifications();
     const [problemCode, setProblemCode] = useState('');
     const [solutionCode, setSolutionCode] = useState('');
     const [lang, setLang] = useState('');
@@ -66,7 +68,16 @@ const Submit = () => {
                 lang: lang
             };
 
-            // 3. Navigate with State IMMEDIATELY
+            // 3. Trigger Notification
+            if (addNotification) {
+                addNotification({
+                    title: 'Report Generated',
+                    message: `Your code analysis for ${lang || 'your submission'} has been successfully completed!`,
+                    route: '/dashboard/reports'
+                });
+            }
+
+            // 4. Navigate with State IMMEDIATELY
             console.log("Submit: Navigating to /dashboard/reports with data...");
             navigate('/dashboard/reports', { state: { data: enhancedResult } });
 
