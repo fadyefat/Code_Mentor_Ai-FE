@@ -72,9 +72,8 @@ const Profile = () => {
         const langData = {};
         reports.forEach(r => {
             if (!r.language || r.language === 'Not detected') return;
-            // Normalize casing (e.g. "python" and "Python" -> "Python")
-            const rawLang = r.language.trim();
-            const lang = rawLang.charAt(0).toUpperCase() + rawLang.slice(1).toLowerCase();
+            // Language is already normalized by formatLanguageName
+            const lang = r.language.trim();
             
             if (!langData[lang]) {
                 langData[lang] = {

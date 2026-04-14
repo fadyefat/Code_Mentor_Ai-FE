@@ -1,5 +1,50 @@
 import { Zap, FileCode, Activity, Code, Terminal } from 'lucide-react';
 
+export const formatLanguageName = (lang) => {
+    if (!lang || lang.trim() === '') return 'Unknown';
+    const lower = lang.trim().toLowerCase();
+    switch (lower) {
+        case 'cpp':
+        case 'c++':
+            return 'C++';
+        case 'csharp':
+        case 'c#':
+            return 'C#';
+        case 'javascript':
+        case 'js':
+            return 'JavaScript';
+        case 'typescript':
+        case 'ts':
+            return 'TypeScript';
+        case 'python':
+        case 'py':
+            return 'Python';
+        case 'java':
+            return 'Java';
+        case 'php':
+            return 'PHP';
+        case 'html':
+            return 'HTML';
+        case 'css':
+            return 'CSS';
+        case 'ruby':
+            return 'Ruby';
+        case 'go':
+        case 'golang':
+            return 'Go';
+        case 'rust':
+            return 'Rust';
+        case 'swift':
+            return 'Swift';
+        case 'kotlin':
+            return 'Kotlin';
+        case 'not detected':
+            return 'Not detected';
+        default:
+            return lang.trim().charAt(0).toUpperCase() + lang.trim().slice(1).toLowerCase();
+    }
+};
+
 export const formatReportData = (apiResponse) => {
     // 1. Generate ID
     const id = apiResponse.id || Date.now();
@@ -40,7 +85,7 @@ export const formatReportData = (apiResponse) => {
     const formatted = {
         id: id,
         // هنا ربطنا الأعمدة بذكاء
-        language: apiResponse.lang || 'Unknown',
+        language: formatLanguageName(apiResponse.lang),
         title: apiResponse.title || 'Code Analysis',
         sub_title: apiResponse.sub_title || '',
         date: date,

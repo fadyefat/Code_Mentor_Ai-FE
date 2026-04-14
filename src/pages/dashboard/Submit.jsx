@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { Upload, Play, Loader2, AlertCircle } from 'lucide-react';
 import { fetchWithRetry } from '../../utils/apiRetry';
+import { formatLanguageName } from '../../utils/reportUtils';
 
 const Submit = () => {
     const { session } = useAuth();
@@ -72,7 +73,7 @@ const Submit = () => {
             if (addNotification) {
                 addNotification({
                     title: 'Report Generated',
-                    message: `Your code analysis for ${lang || 'your submission'} has been successfully completed!`,
+                    message: `Your code analysis for ${formatLanguageName(lang) || 'your submission'} has been successfully completed!`,
                     route: '/dashboard/reports'
                 });
             }
