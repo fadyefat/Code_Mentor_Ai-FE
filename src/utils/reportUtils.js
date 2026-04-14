@@ -50,17 +50,26 @@ export const formatReportData = (apiResponse) => {
         icon: icon, // React Component
         iconName: icon === Zap ? 'Zap' : icon === Activity ? 'Activity' : icon === FileCode ? 'FileCode' : 'Terminal', // String Name
 
-        // Mapped Metrics (User requested specifically 'metrics' with camelCase)
-        metrics: {
-            readability: apiResponse.readability || 0,
-            maintainability: apiResponse.maintainability || 0,
-            efficiency: apiResponse.efficiency || 0,
+        // Robust Metric Extraction: Check flat response, nested metrics object, and multiple synonyms to safeguard against AI JSON schema drift
+        metrics: (() => {
+            const m = apiResponse.metrics || {};
+            const getVal = (...keys) => {
+                for (const k of keys) {
+                    if (apiResponse[k] !== undefined && apiResponse[k] !== null) return Number(apiResponse[k]);
+                    if (m[k] !== undefined && m[k] !== null) return Number(m[k]);
+                }
+                return 0; // Default to 0 if totally absent
+            };
 
-            // Explicit mapping for new fields with fallbacks
-            problemSolving: apiResponse.problem_solving || apiResponse.problemSolving || 0,
-            edgeCases: apiResponse.edge_cases_handling || apiResponse.edge_cases || apiResponse.edgeCases || 0,
-            correctness: apiResponse.correctness || 0
-        },
+            return {
+                readability: getVal('readability', 'readability_score', 'code_readability'),
+                documentation: getVal('documentation', 'maintainability', 'code_documentation', 'documentation_score', 'comments_score', 'maintainability_score'),
+                efficiency: getVal('efficiency', 'performance', 'efficiency_score', 'optimization'),
+                problemSolving: getVal('problem_solving', 'problemSolving', 'logic', 'problem_solving_score', 'solution_quality'),
+                edgeCases: getVal('edge_cases_handling', 'edge_cases', 'edgeCases', 'robustness', 'error_handling'),
+                correctness: getVal('correctness', 'accuracy', 'functionality', 'correctness_score', 'validity')
+            };
+        })(),
 
         // Keep 'quality' for backward compatibility if needed, or just rely on metrics. 
         // We'll update UI to use 'metrics'.
@@ -75,7 +84,7 @@ export const formatReportData = (apiResponse) => {
                 
                 if (!foundSkill || foundSkill.toLowerCase() === 'syntax error') {
                     // Deep scan object values for any of the known skill names
-                    const possibleSkills = ['readability', 'maintainability', 'efficiency', 'problem solving', 'edge cases', 'correctness'];
+                    const possibleSkills = ['readability', 'documentation', 'efficiency', 'problem solving', 'edge cases', 'correctness'];
                     for (const key of Object.keys(issue)) {
                         const val = issue[key];
                         if (typeof val === 'string') {
@@ -93,7 +102,7 @@ export const formatReportData = (apiResponse) => {
                     line: issue.line,
                     severity: issue.severity,
                     message: issue.message,
-                    skill: foundSkill
+                    skill: foundSkill || 'Code Quality'
                 };
             })
         },
@@ -101,10 +110,33 @@ export const formatReportData = (apiResponse) => {
         problem_desc: apiResponse.submitted_problem || apiResponse.problem_code || apiResponse.problem || apiResponse.problem_desc || '', // The problem description
         suggested_solution: apiResponse.suggested_solution || apiResponse.corrected_code || apiResponse.ai_code || apiResponse.suggestion || '',
         diff_view: apiResponse.diff_view || apiResponse.diff || apiResponse.corrected_code || '',
-        recommendations: [
-            ...(Array.isArray(apiResponse.recommendations) ? apiResponse.recommendations : (typeof apiResponse.recommendations === 'string' ? [apiResponse.recommendations] : [])),
-            ...(Array.isArray(apiResponse.suggestions) ? apiResponse.suggestions : (typeof apiResponse.suggestions === 'string' ? [apiResponse.suggestions] : []))
-        ],
+        recommendations: (() => {
+            const recs = new Set();
+            
+            // 1. Array of possible top-level keys
+            [
+                apiResponse.recommendations, apiResponse.recommendation, 
+                apiResponse.suggestions, apiResponse.suggestion, 
+                apiResponse.improvements, apiResponse.best_practices
+            ].forEach(source => {
+                if (Array.isArray(source)) source.forEach(r => { if (typeof r === 'string' && r.trim()) recs.add(r.trim()); });
+                else if (typeof source === 'string' && source.trim()) recs.add(source.trim());
+            });
+
+            // 2. Extract embedded recommendations from individual issues
+            const issueList = Array.isArray(apiResponse.issues) ? apiResponse.issues : (apiResponse.issues?.list || []);
+            if (Array.isArray(issueList)) {
+                issueList.forEach(issue => {
+                    if (issue.recommendation && typeof issue.recommendation === 'string' && issue.recommendation.trim()) {
+                        recs.add(issue.recommendation.trim());
+                    } else if (issue.suggestion && typeof issue.suggestion === 'string' && issue.suggestion.trim()) {
+                        recs.add(issue.suggestion.trim());
+                    }
+                });
+            }
+
+            return Array.from(recs);
+        })(),
         search_topics: apiResponse.search_topics || [],
         roadmap: apiResponse.roadmap || null,
         difficulty: apiResponse.difficulty || apiResponse.problem_difficulty || ''

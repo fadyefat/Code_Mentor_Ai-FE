@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import { useNotifications } from '../../context/NotificationContext';
 
 const Settings = () => {
     const { theme, toggleTheme } = useTheme();
+    const { pushEnabled, togglePush } = useNotifications();
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -46,15 +48,18 @@ const Settings = () => {
 
                 {/* Notifications */}
                 <Section title="Notifications">
-                    <Toggle label="Push Notifications" description="Receive push notifications" defaultChecked />
-                    <Toggle label="Email Notifications" description="Receive email updates" defaultChecked />
-                    <Toggle label="Weekly Report" description="Get a weekly summary of your progress" />
+                    <Toggle 
+                        label="Push Notifications" 
+                        description="Receive push notifications" 
+                        checked={pushEnabled} 
+                        onChange={togglePush} 
+                    />
                 </Section>
 
                 {/* Privacy */}
                 <Section title="Privacy & Security">
                     <div className="mt-4">
-                        <Toggle label="Two-Factor Authentication" description="Enable 2FA for extra security" />
+                        <Toggle label="Two-Factor Authentication" description="Enable 2FA for extra security" checked={false} onChange={() => {}} />
                     </div>
                 </Section>
 
@@ -77,8 +82,7 @@ const Section = ({ title, children }) => (
     </div>
 );
 
-const Toggle = ({ label, description, defaultChecked }) => {
-    const [checked, setChecked] = useState(defaultChecked || false);
+const Toggle = ({ label, description, checked, onChange }) => {
     return (
         <div className="flex items-center justify-between py-3">
             <div>
@@ -86,7 +90,7 @@ const Toggle = ({ label, description, defaultChecked }) => {
                 {description && <p className="text-xs text-text-secondary mt-0.5">{description}</p>}
             </div>
             <button
-                onClick={() => setChecked(!checked)}
+                onClick={onChange}
                 className={`w-11 h-6 rounded-full relative transition-colors ${checked ? 'bg-accent border border-transparent' : 'bg-gray-200 dark:bg-white/5 border border-gray-300 dark:border-white/20'}`}
             >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${checked ? 'left-6' : 'left-1'}`}></div>

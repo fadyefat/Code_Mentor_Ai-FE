@@ -4,6 +4,7 @@ import { LayoutDashboard, Map, FileText, Settings, Plus, LogOut, Bell, Menu, Loa
 // Minimal avatar placeholder or icon
 import { User } from 'lucide-react';
 import { useReports } from '../context/ReportContext';
+import { useNotifications } from '../context/NotificationContext';
 import { supabase } from '../lib/supabaseClient';
 
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ const DashboardLayout = () => {
     const [showNotifications, setShowNotifications] = React.useState(false);
     const { user, signOut, loading: authLoading } = useAuth();
     const { isLoading } = useReports();
+    const { pushEnabled, notifications, unreadCount, markAllAsRead } = useNotifications();
     const navigate = useNavigate();
 
     // Remove the explicit localStorage read inside useEffect
@@ -37,12 +39,6 @@ const DashboardLayout = () => {
             </div>
         );
     }
-
-    const notifications = [
-        { id: 1, title: 'New Review', message: 'Your Python script has been reviewed.', time: '2m ago' },
-        { id: 2, title: 'Streak!', message: 'You reached a 7-day streak!', time: '1h ago' },
-        { id: 3, title: 'Welcome', message: 'Welcome to CodeMentor AI Pro.', time: '1d ago' },
-    ];
 
     return (
         <div className="flex h-screen bg-primary text-text-primary overflow-hidden">
@@ -110,40 +106,46 @@ const DashboardLayout = () => {
                     </button>
 
                     <div className="flex items-center gap-4 relative ml-auto">
-                        <button
-                            onClick={() => setShowNotifications(!showNotifications)}
-                            className="relative p-2 hover:bg-white/5 rounded-full transition-colors"
-                        >
-                            <Bell className="w-5 h-5 text-text-secondary" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        </button>
+                        {pushEnabled && (
+                            <button
+                                onClick={() => {
+                                    setShowNotifications(!showNotifications);
+                                    if (!showNotifications) markAllAsRead();
+                                }}
+                                className="relative p-2 hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-accent animate-bounce' : 'text-text-secondary'}`} />
+                                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_#ef4444]"></span>}
+                            </button>
+                        )}
 
                         {/* Notifications Dropdown */}
-                        {showNotifications && (
+                        {showNotifications && pushEnabled && (
                             <div className="absolute top-full right-0 mt-2 w-80 bg-secondary border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                                 <div className="p-4 border-b border-border flex justify-between items-center">
                                     <h3 className="font-bold text-text-primary">Notifications</h3>
-                                    <span className="text-xs text-accent cursor-pointer hover:underline">Mark all read</span>
                                 </div>
-                                <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                                    {notifications.map(notif => (
-                                        <div key={notif.id} className="p-4 border-b border-border hover:bg-white/5 transition-colors cursor-pointer">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h4 className="text-sm font-semibold text-text-primary">{notif.title}</h4>
-                                                <span className="text-[10px] text-text-secondary">{notif.time}</span>
-                                            </div>
-                                            <p className="text-xs text-text-secondary line-clamp-2">{notif.message}</p>
+                                <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                                    {notifications.length === 0 ? (
+                                        <div className="p-6 text-center text-sm text-text-secondary">
+                                            No new notifications
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="p-3 text-center border-t border-white/10">
-                                    <NavLink
-                                        to="/dashboard/reports"
-                                        onClick={() => setShowNotifications(false)}
-                                        className="inline-block text-xs text-text-primary border border-border rounded-lg px-4 py-2 hover:bg-text-primary/5 hover:underline transition-colors"
-                                    >
-                                        View All Activity
-                                    </NavLink>
+                                    ) : (
+                                        notifications.map(notif => (
+                                            <NavLink 
+                                                to={notif.route} 
+                                                key={notif.id} 
+                                                onClick={() => setShowNotifications(false)}
+                                                className={`block p-4 border-b border-border hover:bg-white/5 transition-colors cursor-pointer ${notif.read ? 'opacity-70' : 'bg-primary/30'}`}
+                                            >
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h4 className="text-sm font-semibold text-text-primary">{notif.title}</h4>
+                                                    <span className="text-[10px] text-text-secondary">{notif.time}</span>
+                                                </div>
+                                                <p className="text-xs text-text-secondary line-clamp-2">{notif.message}</p>
+                                            </NavLink>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}

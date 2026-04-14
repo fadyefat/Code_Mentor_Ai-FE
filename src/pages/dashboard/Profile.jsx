@@ -69,29 +69,54 @@ const Profile = () => {
     const derivedSkills = useMemo(() => {
         if (!reports || reports.length === 0) return [];
         
-        const skillMap = {};
+        const langData = {};
         reports.forEach(r => {
             if (!r.language || r.language === 'Not detected') return;
             // Normalize casing (e.g. "python" and "Python" -> "Python")
             const rawLang = r.language.trim();
             const lang = rawLang.charAt(0).toUpperCase() + rawLang.slice(1).toLowerCase();
             
+            if (!langData[lang]) {
+                langData[lang] = {
+                    maxScore: 0,
+                    count: 0,
+                    metrics: { readability: 0, documentation: 0, efficiency: 0, problemSolving: 0, edgeCases: 0, correctness: 0 }
+                };
+            }
+            
             const score = Math.round(Number(r.score) || 0);
-            if (!skillMap[lang] || score > skillMap[lang]) {
-                skillMap[lang] = score;
+            if (score > langData[lang].maxScore) {
+                langData[lang].maxScore = score;
+            }
+            
+            langData[lang].count++;
+            if (r.metrics) {
+                langData[lang].metrics.readability += r.metrics.readability || 0;
+                langData[lang].metrics.documentation += r.metrics.documentation || 0;
+                langData[lang].metrics.efficiency += r.metrics.efficiency || 0;
+                langData[lang].metrics.problemSolving += r.metrics.problemSolving || 0;
+                langData[lang].metrics.edgeCases += r.metrics.edgeCases || 0;
+                langData[lang].metrics.correctness += r.metrics.correctness || 0;
             }
         });
 
         const colors = ["bg-blue-400", "bg-yellow-400", "bg-cyan-400", "bg-green-400", "bg-pink-400", "bg-purple-400", "bg-orange-400"];
         
-        return Object.entries(skillMap)
-            .sort((a, b) => b[1] - a[1])
+        return Object.entries(langData)
+            .map(([name, data]) => {
+                const avgMetrics = {
+                    readability: Math.round(data.metrics.readability / data.count),
+                    documentation: Math.round(data.metrics.documentation / data.count),
+                    efficiency: Math.round(data.metrics.efficiency / data.count),
+                    problemSolving: Math.round(data.metrics.problemSolving / data.count),
+                    edgeCases: Math.round(data.metrics.edgeCases / data.count),
+                    correctness: Math.round(data.metrics.correctness / data.count)
+                };
+                return { name, progress: data.maxScore, metrics: avgMetrics };
+            })
+            .sort((a, b) => b.progress - a.progress)
             .slice(0, 5)
-            .map(([name, progress], index) => ({
-                name,
-                progress,
-                color: colors[index % colors.length]
-            }));
+            .map((item, index) => ({ ...item, color: colors[index % colors.length] }));
     }, [reports]);
 
     const derivedAchievements = useMemo(() => {
@@ -233,16 +258,42 @@ const Profile = () => {
                         ) : (
                             <div className="space-y-4">
                                 {derivedSkills.map((skill, index) => (
-                                    <div key={index}>
+                                    <div key={index} className="group relative cursor-default">
                                         <div className="flex justify-between mb-1">
-                                            <span className="text-sm font-medium text-text-primary">{skill.name}</span>
-                                            <span className="text-sm text-text-secondary">{skill.progress}%</span>
+                                            <span className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">{skill.name}</span>
+                                            <span className="text-sm text-text-secondary">{skill.progress}% (Best)</span>
                                         </div>
                                         <div className="w-full bg-primary rounded-full h-2">
                                             <div
                                                 className={`${skill.color} h-2 rounded-full transition-all duration-1000`}
                                                 style={{ width: `${skill.progress}%` }}
                                             ></div>
+                                        </div>
+                                        
+                                        {/* Hover Tooltip for Average Metrics */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-5 rounded-2xl bg-[#0a1128] border border-white/10 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a1128] border-b border-r border-white/10 rotate-45"></div>
+                                            <h4 className="text-sm font-bold text-white mb-4 text-center border-b border-white/5 pb-3 uppercase tracking-wide">{skill.name} Average Quality</h4>
+                                            <div className="space-y-3">
+                                                {[
+                                                    { label: 'Readability', val: skill.metrics.readability, c: 'bg-blue-500' },
+                                                    { label: 'Documentation', val: skill.metrics.documentation, c: 'bg-indigo-500' },
+                                                    { label: 'Efficiency', val: skill.metrics.efficiency, c: 'bg-teal-500' },
+                                                    { label: 'Problem Solving', val: skill.metrics.problemSolving, c: 'bg-orange-500' },
+                                                    { label: 'Edge Cases', val: skill.metrics.edgeCases, c: 'bg-red-500' },
+                                                    { label: 'Correctness', val: skill.metrics.correctness, c: 'bg-green-500' }
+                                                ].map((m, i) => (
+                                                    <div key={i}>
+                                                        <div className="flex justify-between text-xs text-white/70 mb-1.5 font-medium">
+                                                            <span>{m.label}</span>
+                                                            <span className="text-white font-bold">{m.val}%</span>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                                                            <div className={`h-full ${m.c}`} style={{ width: `${m.val}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

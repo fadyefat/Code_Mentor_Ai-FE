@@ -63,8 +63,9 @@ const Reports = () => {
     }, [directData, addReport, navigate, location.pathname]);
 
     // 2. Determine which report to show
-    // Priority: Local Report -> Selected Report -> First Filtered Report -> First Report
-    const displayReport = localReport || reports.find(r => r.id === selectedReportId) || filteredReports[0] || reports[0];
+    // Priority: Synced Context Version of Local -> Local Report -> Selected Report -> First Filtered Report -> First Report
+    const contextVersionOfLocal = localReport ? reports.find(r => r.id === localReport.id) : null;
+    const displayReport = contextVersionOfLocal || localReport || reports.find(r => r.id === selectedReportId) || filteredReports[0] || reports[0];
 
     // Effect: If we don't have a local report, select the first one from context when it loads
     useEffect(() => {
@@ -249,7 +250,7 @@ const Reports = () => {
                         <h3 className="text-text-primary font-bold mb-6">Code Quality</h3>
                         <div className="space-y-6">
                             <SkillBar label="Readability" percentage={selectedReport.metrics?.readability || 0} color="bg-blue-600" />
-                            <SkillBar label="Maintainability" percentage={selectedReport.metrics?.maintainability || 0} color="bg-purple" />
+                            <SkillBar label="Documentation" percentage={selectedReport.metrics?.documentation || 0} color="bg-purple" />
                             <SkillBar label="Efficiency" percentage={selectedReport.metrics?.efficiency || 0} color="bg-teal-600" />
                             <SkillBar label="Problem Solving" percentage={selectedReport.metrics?.problemSolving || 0} color="bg-orange-600" />
                             <SkillBar label="Edge Cases" percentage={selectedReport.metrics?.edgeCases || 0} color="bg-red-600" />
@@ -299,11 +300,12 @@ const Reports = () => {
                                                         const s = issue.skill.toLowerCase();
                                                         let sColor = 'text-gray-300 bg-gray-500/10 border-gray-500/20';
                                                         if (s.includes('readability')) sColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-                                                        else if (s.includes('maintainability')) sColor = 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+                                                        else if (s.includes('documentation')) sColor = 'text-purple-400 bg-purple-500/10 border-purple-500/20';
                                                         else if (s.includes('efficiency')) sColor = 'text-teal-400 bg-teal-500/10 border-teal-500/20';
                                                         else if (s.includes('problem')) sColor = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
                                                         else if (s.includes('edge')) sColor = 'text-red-400 bg-red-500/10 border-red-500/20';
                                                         else if (s.includes('correctness')) sColor = 'text-green-400 bg-green-500/10 border-green-500/20';
+                                                        else if (s.includes('quality')) sColor = 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
                                                         
                                                         return (
                                                             <>
@@ -435,11 +437,12 @@ const Reports = () => {
                                                                             const s = iss.skill.toLowerCase();
                                                                             let sColor = 'text-gray-300 bg-black/30 border-white/5';
                                                                             if (s.includes('readability')) sColor = 'text-blue-300 bg-blue-500/20 border-blue-500/30';
-                                                                            else if (s.includes('maintainability')) sColor = 'text-purple-300 bg-purple-500/20 border-purple-500/30';
+                                                                            else if (s.includes('documentation')) sColor = 'text-purple-300 bg-purple-500/20 border-purple-500/30';
                                                                             else if (s.includes('efficiency')) sColor = 'text-teal-300 bg-teal-500/20 border-teal-500/30';
                                                                             else if (s.includes('problem')) sColor = 'text-orange-300 bg-orange-500/20 border-orange-500/30';
                                                                             else if (s.includes('edge')) sColor = 'text-red-300 bg-red-500/20 border-red-500/30';
                                                                             else if (s.includes('correctness')) sColor = 'text-green-300 bg-green-500/20 border-green-500/30';
+                                                                            else if (s.includes('quality')) sColor = 'text-indigo-300 bg-indigo-500/20 border-indigo-500/30';
                                                                             return (
                                                                                 <>
                                                                                     <span className="text-gray-500 text-xs">•</span>
@@ -512,19 +515,21 @@ const Reports = () => {
                 </div>
 
                 {/* Recommendations */}
-                <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
-                    <h3 className="text-text-primary font-bold mb-6">Recommendations</h3>
-                    <div className="space-y-3">
-                        {selectedReport.recommendations && selectedReport.recommendations.map((rec, index) => (
-                            <div key={index} className="p-4 bg-primary/50 border border-white/5 rounded-xl flex items-start gap-3 hover:border-white/10 transition-colors">
-                                <div className="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5">
-                                    {index + 1}
+                {selectedReport.recommendations && selectedReport.recommendations.length > 0 && (
+                    <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
+                        <h3 className="text-text-primary font-bold mb-6">Recommendations</h3>
+                        <div className="space-y-3">
+                            {selectedReport.recommendations.slice(0, 5).map((rec, index) => (
+                                <div key={index} className="p-4 bg-primary/50 border border-white/5 rounded-xl flex items-start gap-3 hover:border-white/10 transition-colors">
+                                    <div className="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5">
+                                        {index + 1}
+                                    </div>
+                                    <p className="text-sm text-text-secondary">{rec}</p>
                                 </div>
-                                <p className="text-sm text-text-secondary">{rec}</p>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
             </div>
         </div>

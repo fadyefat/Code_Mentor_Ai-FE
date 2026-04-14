@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../lib/supabaseClient';
 import { formatReportData } from '../utils/reportUtils';
 import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
 
 const ReportContext = createContext();
 
@@ -9,6 +10,7 @@ export const useReports = () => useContext(ReportContext);
 
 export const ReportProvider = ({ children }) => {
     const { user } = useAuth();
+    const { addNotification } = useNotifications();
     const [reports, setReports] = useState([]);
     const [isLoading, setIsLoading] = useState(false); // Default false, only true on explicit fetch
     const [lastFetchedUserId, setLastFetchedUserId] = useState(null);
@@ -140,13 +142,22 @@ export const ReportProvider = ({ children }) => {
                 // 3. Replace the optimistic report with the real one from DB (with correct UUID)
                 finalReport = formatReportData(insertedData);
                 setReports(prev => prev.map(r => r.id === optimisticId ? finalReport : r));
+                
+                // Emitting the push notification
+                if (addNotification) {
+                    addNotification({
+                        title: 'Report Generated',
+                        message: `Your ${finalReport.language} code analysis has been completed!`,
+                        route: '/dashboard/reports'
+                    });
+                }
             }
         } catch (err) {
             console.error("[ReportContext] Persistence Failed:", err);
         }
 
         return finalReport;
-    }, []);
+    }, [addNotification]);
 
     // Refresh function for Silent Sync
     const refreshReports = useCallback(async () => {
