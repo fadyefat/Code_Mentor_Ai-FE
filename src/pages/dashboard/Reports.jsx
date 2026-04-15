@@ -8,6 +8,7 @@ const Reports = () => {
     const { reports, isLoading, addReport, refreshReports } = useReports(); // Added refreshReports
     const [selectedReportId, setSelectedReportId] = useState(null);
     const [activeTab, setActiveTab] = useState('source');
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, issues: [], tipBorder: '' });
     const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
@@ -126,6 +127,45 @@ const Reports = () => {
 
     return (
         <div className="flex flex-col lg:flex-row h-full gap-6 overflow-hidden">
+
+            {/* Fixed-position global tooltip — escapes all overflow containers */}
+            {tooltip.visible && (
+                <div
+                    className={`fixed z-[9999] bg-[#1a2540] border ${tooltip.tipBorder} p-3 rounded-lg shadow-2xl text-xs w-max max-w-sm text-gray-200 pointer-events-none`}
+                    style={{ left: tooltip.x, top: tooltip.y }}
+                >
+                    {tooltip.issues.map((iss, i) => {
+                        const issSev = iss.severity?.toLowerCase() || 'minor';
+                        const issCrit = issSev === 'critical';
+                        const issMaj = issSev === 'major';
+                        const issMed = issSev === 'medium' || issSev === 'warning';
+                        const textColor = issCrit ? 'text-red-400' : issMaj ? 'text-orange-400' : issMed ? 'text-yellow-400' : 'text-blue-400';
+                        const s = iss.skill?.toLowerCase() || '';
+                        let sColor = 'text-gray-300 bg-black/30 border-white/5';
+                        if (s.includes('readability')) sColor = 'text-blue-300 bg-blue-500/20 border-blue-500/30';
+                        else if (s.includes('documentation')) sColor = 'text-purple-300 bg-purple-500/20 border-purple-500/30';
+                        else if (s.includes('efficiency')) sColor = 'text-teal-300 bg-teal-500/20 border-teal-500/30';
+                        else if (s.includes('problem')) sColor = 'text-orange-300 bg-orange-500/20 border-orange-500/30';
+                        else if (s.includes('edge')) sColor = 'text-red-300 bg-red-500/20 border-red-500/30';
+                        else if (s.includes('correctness')) sColor = 'text-green-300 bg-green-500/20 border-green-500/30';
+                        else if (s.includes('quality')) sColor = 'text-indigo-300 bg-indigo-500/20 border-indigo-500/30';
+                        return (
+                            <div key={i} className={i !== 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
+                                <div className="flex items-center flex-wrap gap-2 mb-1">
+                                    <span className={`font-bold tracking-wider uppercase ${textColor}`}>{iss.severity} ISSUE</span>
+                                    {iss.skill && (
+                                        <>
+                                            <span className="text-gray-500">•</span>
+                                            <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${sColor}`}>{iss.skill}</span>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="opacity-90 leading-relaxed font-sans">{iss.message}</div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Left Sidebar - List */}
             <div className="w-full lg:w-1/3 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
@@ -415,46 +455,23 @@ const Reports = () => {
                                                 }
 
                                                 return (
-                                                    <div key={idx} className={`group relative flex px-6 py-0.5 my-[1px] hover:bg-white/5 transition-colors ${bgClass}`}>
+                                                    <div
+                                                        key={idx}
+                                                        className={`group relative flex px-6 py-0.5 my-[1px] hover:bg-white/5 transition-colors cursor-pointer ${bgClass}`}
+                                                        onMouseEnter={(e) => {
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            setTooltip({
+                                                                visible: true,
+                                                                x: rect.left + 64,
+                                                                y: rect.bottom + 6,
+                                                                issues,
+                                                                tipBorder,
+                                                            });
+                                                        }}
+                                                        onMouseLeave={() => setTooltip(t => ({ ...t, visible: false }))}
+                                                    >
                                                         <div className="text-gray-500 select-none mr-4 w-8 text-right shrink-0 font-medium">{lineNum}</div>
                                                         <div className="flex-1 whitespace-pre">{lineText || ' '}</div>
-
-                                                        {/* Tooltip */}
-                                                        <div className={`absolute left-16 top-full mt-1 z-50 hidden group-hover:block bg-[#1a2540] border ${tipBorder} p-3 rounded-lg shadow-2xl text-xs w-max max-w-sm text-gray-200 z-[60]`}>
-                                                            {issues.map((iss, i) => {
-                                                                const issSev = iss.severity?.toLowerCase() || 'minor';
-                                                                const issCrit = issSev === 'critical';
-                                                                const issMaj = issSev === 'major';
-                                                                const issMed = issSev === 'medium' || issSev === 'warning';
-                                                                const textColor = issCrit ? 'text-red-400' : issMaj ? 'text-orange-400' : issMed ? 'text-yellow-400' : 'text-blue-400';
-                                                                return (
-                                                                <div key={i} className={i !== 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
-                                                                    <div className="flex items-center flex-wrap gap-2 mb-1">
-                                                                        <div className={`font-bold tracking-wider uppercase ${textColor}`}>
-                                                                            {iss.severity} ISSUE
-                                                                        </div>
-                                                                        {iss.skill && (() => {
-                                                                            const s = iss.skill.toLowerCase();
-                                                                            let sColor = 'text-gray-300 bg-black/30 border-white/5';
-                                                                            if (s.includes('readability')) sColor = 'text-blue-300 bg-blue-500/20 border-blue-500/30';
-                                                                            else if (s.includes('documentation')) sColor = 'text-purple-300 bg-purple-500/20 border-purple-500/30';
-                                                                            else if (s.includes('efficiency')) sColor = 'text-teal-300 bg-teal-500/20 border-teal-500/30';
-                                                                            else if (s.includes('problem')) sColor = 'text-orange-300 bg-orange-500/20 border-orange-500/30';
-                                                                            else if (s.includes('edge')) sColor = 'text-red-300 bg-red-500/20 border-red-500/30';
-                                                                            else if (s.includes('correctness')) sColor = 'text-green-300 bg-green-500/20 border-green-500/30';
-                                                                            else if (s.includes('quality')) sColor = 'text-indigo-300 bg-indigo-500/20 border-indigo-500/30';
-                                                                            return (
-                                                                                <>
-                                                                                    <span className="text-gray-500 text-xs">•</span>
-                                                                                    <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${sColor}`}>{iss.skill}</span>
-                                                                                </>
-                                                                            );
-                                                                        })()}
-                                                                    </div>
-                                                                    <div className="opacity-90 leading-relaxed font-sans">{iss.message}</div>
-                                                                </div>
-                                                            )})}
-                                                        </div>
                                                     </div>
                                                 );
                                             }
