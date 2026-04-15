@@ -16,10 +16,11 @@ const DashboardLayout = () => {
     const { pushEnabled, notifications, unreadCount, markAllAsRead } = useNotifications();
     const navigate = useNavigate();
 
-    // Remove the explicit localStorage read inside useEffect
-    // The AuthContext handles state now
-
-    // Remove unused effect
+    React.useEffect(() => {
+        if (!authLoading && !user) {
+            navigate('/login', { replace: true });
+        }
+    }, [user, authLoading, navigate]);
 
     const handleSignOut = async (e) => {
         e.preventDefault();
@@ -39,6 +40,8 @@ const DashboardLayout = () => {
             </div>
         );
     }
+
+    if (!user) return null;
 
     return (
         <div className="flex h-screen bg-primary text-text-primary overflow-hidden">
