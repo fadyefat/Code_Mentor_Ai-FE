@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../lib/supabaseClient';
 import { formatReportData } from '../utils/reportUtils';
 import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
 
 const ReportContext = createContext();
 
@@ -9,8 +10,10 @@ export const useReports = () => useContext(ReportContext);
 
 export const ReportProvider = ({ children }) => {
     const { user } = useAuth();
+    const { addNotification } = useNotifications();
     const [reports, setReports] = useState([]);
     const [isLoading, setIsLoading] = useState(false); // Default false, only true on explicit fetch
+    const [lastFetchedUserId, setLastFetchedUserId] = useState(null);
 
     // Fetch reports function (exposed for silent sync)
     const fetchAnalysis = async (userId) => {
@@ -46,17 +49,20 @@ export const ReportProvider = ({ children }) => {
         let mounted = true;
 
         if (user) {
-            // Only fetch if we don't already have reports (e.g., initial load)
-            if (reports.length === 0) {
-                console.log("[ReportContext] Auth user found, fetching initial reports:", user.id);
+            // Only fetch if we haven't fetched for this specific user yet
+            if (user.id !== lastFetchedUserId) {
+                console.log("[ReportContext] Auth user changed/new, fetching initial reports:", user.id);
+                setReports([]); // Clear old reports immediately to prevent leakage
+                setLastFetchedUserId(user.id);
                 fetchAnalysis(user.id);
             } else {
-                console.log("[ReportContext] Reports already exist, skipping initial fetch.");
+                console.log("[ReportContext] Reports already exist for this user, skipping initial fetch.");
             }
         } else {
             if (mounted) {
                 console.log("[ReportContext] No user found, clearing reports.");
                 setReports([]);
+                setLastFetchedUserId(null);
                 setIsLoading(false);
             }
         }
@@ -142,7 +148,7 @@ export const ReportProvider = ({ children }) => {
         }
 
         return finalReport;
-    }, []);
+    }, [addNotification]);
 
     // Refresh function for Silent Sync
     const refreshReports = useCallback(async () => {

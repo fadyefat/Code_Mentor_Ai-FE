@@ -15,12 +15,12 @@ const Navbar = () => {
         <nav className="w-full py-6 px-10 flex justify-between items-center bg-primary/80 backdrop-blur-md fixed top-0 z-50 border-b border-border">
             {/* Logo Logic: If logged in, do nothing. If logged out, link to / */}
             {user ? (
-                <div className="text-accent text-2xl font-bold tracking-wider cursor-default select-none">
-                    CodeMentor AI
+                <div className="flex items-center cursor-default select-none w-[180px] h-16 -ml-6 md:-ml-4 relative">
+                    <img src="/logo.png" alt="CodeMentor AI" className="absolute top-1/2 -translate-y-1/2 w-full h-auto object-contain transform scale-[1.7] origin-left pointer-events-none" />
                 </div>
             ) : (
-                <Link to="/" className="text-accent text-2xl font-bold tracking-wider hover:opacity-80 transition-opacity" onClick={() => window.scrollTo(0, 0)}>
-                    CodeMentor AI
+                <Link to="/" className="flex items-center hover:opacity-80 transition-opacity w-[180px] h-16 -ml-6 md:-ml-4 relative" onClick={() => window.scrollTo(0, 0)}>
+                    <img src="/logo.png" alt="CodeMentor AI" className="absolute top-1/2 -translate-y-1/2 w-full h-auto object-contain transform scale-[1.7] origin-left pointer-events-none" />
                 </Link>
             )}
 

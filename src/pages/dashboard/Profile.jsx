@@ -66,14 +66,109 @@ const Profile = () => {
         avatar: profile?.avatar_url || null
     };
 
-    // Static Data (Placeholders until DB schema is live)
-    const skills = [
-        { name: "JavaScript", progress: 90, color: "bg-blue-400" },
-        { name: "React", progress: 85, color: "bg-cyan-400" },
-        { name: "Python", progress: 75, color: "bg-yellow-400" },
-        { name: "CSS", progress: 83, color: "bg-pink-400" },
-        { name: "Node.js", progress: 70, color: "bg-green-400" },
-    ];
+    const derivedSkills = useMemo(() => {
+        if (!reports || reports.length === 0) return [];
+        
+        const langData = {};
+        reports.forEach(r => {
+            if (!r.language || r.language === 'Not detected') return;
+            // Language is already normalized by formatLanguageName
+            const lang = r.language.trim();
+            
+            if (!langData[lang]) {
+                langData[lang] = {
+                    maxScore: 0,
+                    count: 0,
+                    metrics: { readability: 0, documentation: 0, efficiency: 0, problemSolving: 0, edgeCases: 0, correctness: 0 }
+                };
+            }
+            
+            const score = Math.round(Number(r.score) || 0);
+            if (score > langData[lang].maxScore) {
+                langData[lang].maxScore = score;
+            }
+            
+            langData[lang].count++;
+            if (r.metrics) {
+                langData[lang].metrics.readability += r.metrics.readability || 0;
+                langData[lang].metrics.documentation += r.metrics.documentation || 0;
+                langData[lang].metrics.efficiency += r.metrics.efficiency || 0;
+                langData[lang].metrics.problemSolving += r.metrics.problemSolving || 0;
+                langData[lang].metrics.edgeCases += r.metrics.edgeCases || 0;
+                langData[lang].metrics.correctness += r.metrics.correctness || 0;
+            }
+        });
+
+        const colors = ["bg-blue-400", "bg-yellow-400", "bg-cyan-400", "bg-green-400", "bg-pink-400", "bg-purple-400", "bg-orange-400"];
+        
+        return Object.entries(langData)
+            .map(([name, data]) => {
+                const avgMetrics = {
+                    readability: Math.round(data.metrics.readability / data.count),
+                    documentation: Math.round(data.metrics.documentation / data.count),
+                    efficiency: Math.round(data.metrics.efficiency / data.count),
+                    problemSolving: Math.round(data.metrics.problemSolving / data.count),
+                    edgeCases: Math.round(data.metrics.edgeCases / data.count),
+                    correctness: Math.round(data.metrics.correctness / data.count)
+                };
+                return { name, progress: data.maxScore, metrics: avgMetrics };
+            })
+            .sort((a, b) => b.progress - a.progress)
+            .slice(0, 5)
+            .map((item, index) => ({ ...item, color: colors[index % colors.length] }));
+    }, [reports]);
+
+    const derivedAchievements = useMemo(() => {
+        if (!reports || reports.length === 0) return [];
+        
+        const achieves = [];
+        
+        // 1. First Review
+        achieves.push({
+            title: "First Review",
+            date: reports[reports.length - 1]?.date || "Just now",
+            icon: Trophy,
+            color: "text-red-500",
+            bg: "bg-red-500/20"
+        });
+
+        // 2. Consistent Coder
+        if (reports.length >= 5) {
+            achieves.push({
+                title: "5+ Submissions",
+                date: reports[reports.length - 5]?.date || "Recently",
+                icon: Trophy,
+                color: "text-yellow-500",
+                bg: "bg-yellow-500/20"
+            });
+        }
+
+        // 3. Excellence
+        const excellentReport = reports.find(r => r.status === 'Excellent' || r.score >= 90);
+        if (excellentReport) {
+            achieves.push({
+                title: "Excellence",
+                date: excellentReport.date,
+                icon: Trophy,
+                color: "text-green-500",
+                bg: "bg-green-500/20"
+            });
+        }
+
+        // 4. Language Master
+        const masterReport = reports.find(r => r.score >= 95);
+        if (masterReport) {
+            achieves.push({
+                title: `${masterReport.language} Master`,
+                date: masterReport.date,
+                icon: Trophy,
+                color: "text-purple-500",
+                bg: "bg-purple-500/20"
+            });
+        }
+        
+        return achieves.slice(0, 4);
+    }, [reports]);
 
     if (loading || authLoading) {
         return (
@@ -83,11 +178,13 @@ const Profile = () => {
         );
     }
 
+    const masteredCount = derivedSkills.filter(skill => skill.progress >= 95).length;
+
     const stats = [
         { label: "Projects Reviewed", value: statsResult.reviewed, icon: Code, color: "bg-blue-500" },
         { label: "Lines of Code", value: statsResult.lines, icon: Hash, color: "bg-purple-500" },
         { label: "Learning Streak", value: `${profile?.current_streak || 0} days`, icon: Calendar, color: "bg-orange-500" },
-        { label: "Skills Mastered", value: "5", icon: Trophy, color: "bg-green-500" }, // Mock for now
+        { label: "Skills Mastered", value: masteredCount, icon: Trophy, color: "bg-green-500" },
     ];
 
     return (
@@ -151,49 +248,59 @@ const Profile = () => {
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-text-primary">Technical Skills</h3>
                         </div>
-                        <div className="space-y-4">
-                            {skills.map((skill, index) => (
-                                <div key={index}>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-sm font-medium text-text-primary">{skill.name}</span>
-                                        <span className="text-sm text-text-secondary">{skill.progress}%</span>
+                        {derivedSkills.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-8 text-center bg-primary/20 rounded-xl border border-white/5">
+                                <Code className="w-10 h-10 text-text-secondary opacity-50 mb-3" />
+                                <h4 className="text-text-primary font-medium mb-1">Awaiting Data</h4>
+                                <p className="text-xs text-text-secondary max-w-[200px] mx-auto">Waiting for your first report. Submit code to generate your technical skill profile!</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {derivedSkills.map((skill, index) => (
+                                    <div key={index} className="group relative cursor-default">
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">{skill.name}</span>
+                                            <span className="text-sm text-text-secondary">{skill.progress}% (Best)</span>
+                                        </div>
+                                        <div className="w-full bg-primary rounded-full h-2">
+                                            <div
+                                                className={`${skill.color} h-2 rounded-full transition-all duration-1000`}
+                                                style={{ width: `${skill.progress}%` }}
+                                            ></div>
+                                        </div>
+                                        
+                                        {/* Hover Tooltip for Average Metrics */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-5 rounded-2xl bg-[#0a1128] border border-white/10 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a1128] border-b border-r border-white/10 rotate-45"></div>
+                                            <h4 className="text-sm font-bold text-white mb-4 text-center border-b border-white/5 pb-3 uppercase tracking-wide">{skill.name} Average Quality</h4>
+                                            <div className="space-y-3">
+                                                {[
+                                                    { label: 'Readability', val: skill.metrics.readability, c: 'bg-blue-500' },
+                                                    { label: 'Documentation', val: skill.metrics.documentation, c: 'bg-indigo-500' },
+                                                    { label: 'Efficiency', val: skill.metrics.efficiency, c: 'bg-teal-500' },
+                                                    { label: 'Problem Solving', val: skill.metrics.problemSolving, c: 'bg-orange-500' },
+                                                    { label: 'Edge Cases', val: skill.metrics.edgeCases, c: 'bg-red-500' },
+                                                    { label: 'Correctness', val: skill.metrics.correctness, c: 'bg-green-500' }
+                                                ].map((m, i) => (
+                                                    <div key={i}>
+                                                        <div className="flex justify-between text-xs text-white/70 mb-1.5 font-medium">
+                                                            <span>{m.label}</span>
+                                                            <span className="text-white font-bold">{m.val}%</span>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                                                            <div className={`h-full ${m.c}`} style={{ width: `${m.val}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="w-full bg-primary rounded-full h-2">
-                                        <div
-                                            className={`${skill.color} h-2 rounded-full transition-all duration-1000`}
-                                            style={{ width: `${skill.progress}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Additional Info Block (About/Socials) Merged */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-text-primary mb-4">About Me</h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <MapPin className="w-4 h-4 text-accent" /> {displayUser.location}
-                                </div>
-                                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <Mail className="w-4 h-4 text-accent" /> {displayUser.email}
-                                </div>
-                                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <LinkIcon className="w-4 h-4 text-accent" /> {displayUser.website}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-text-primary mb-4">Socials</h3>
-                            <div className="flex gap-4">
-                                <a href="#" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-text-primary transition-colors"><Github className="w-5 h-5" /></a>
-                                <a href="#" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-blue-400 transition-colors"><Twitter className="w-5 h-5" /></a>
-                                <a href="#" className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-blue-600 transition-colors"><Linkedin className="w-5 h-5" /></a>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Additional Info Block Removed per request */}
                 </div>
 
                 {/* Right Column: Achievements (from Home) */}
@@ -201,36 +308,25 @@ const Profile = () => {
                     <div className="bg-secondary/50 backdrop-blur border border-border p-6 rounded-xl flex flex-col">
                         <h3 className="text-lg font-bold text-text-primary mb-6">Achievements</h3>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">First Review</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 2, 2025</p>
+                        {derivedAchievements.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-8 text-center bg-primary/20 rounded-xl border border-white/5 flex-1 min-h-[200px]">
+                                <Trophy className="w-10 h-10 text-text-secondary opacity-50 mb-3" />
+                                <h4 className="text-text-primary font-medium mb-1">No Achievements Yet</h4>
+                                <p className="text-xs text-text-secondary">Submit your first code to start unlocking achievements!</p>
                             </div>
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">JS Master</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 10, 2025</p>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4">
+                                {derivedAchievements.map((achieve, idx) => (
+                                    <div key={idx} className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
+                                        <div className={`w-10 h-10 ${achieve.bg} rounded-full flex items-center justify-center ${achieve.color} mb-2`}>
+                                            <achieve.icon className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-text-primary text-sm">{achieve.title}</h4>
+                                        <p className="text-xs text-text-secondary mt-1">{achieve.date}</p>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">30 Day Streak</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 15, 2025</p>
-                            </div>
-                            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col items-center text-center hover:bg-white/5 transition-colors">
-                                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500 mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <h4 className="font-bold text-text-primary text-sm">React Expert</h4>
-                                <p className="text-xs text-text-secondary mt-1">Jan 20, 2025</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

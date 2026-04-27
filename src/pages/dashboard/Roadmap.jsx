@@ -3,11 +3,13 @@ import { ChevronRight, Lock, CheckCircle, Circle, ArrowLeft, Search, Code, FileC
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useReports } from '../../context/ReportContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { supabase } from '../../lib/supabaseClient';
 
 const Roadmap = () => {
     const { session } = useAuth();
     const { reports, isLoading: reportsLoading } = useReports();
+    const { addNotification } = useNotifications();
     const [activeTab, setActiveTab] = useState('list'); // 'list' or 'detail'
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -133,6 +135,15 @@ const Roadmap = () => {
                         // Optimistically update the context/state reports so it doesn't fetch again next time
                         if (dbReport) {
                             dbReport.roadmap = rawData;
+                        }
+
+                        // Emit a push notification for successful roadmap generation
+                        if (addNotification) {
+                            addNotification({
+                                title: 'Roadmap Available',
+                                message: `Your personalized learning path for ${languageName} is ready!`,
+                                route: '/dashboard/roadmap'
+                            });
                         }
 
                         // Save back to code_submit as well for faster context fetching

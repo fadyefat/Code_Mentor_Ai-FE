@@ -3,9 +3,11 @@ import { Sparkles, Code, FileText, Send, ChevronDown, Check, Loader2 } from 'luc
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithRetry } from '../../utils/apiRetry';
+import { useNotifications } from '../../context/NotificationContext';
 
 const Chat = () => {
     const { session } = useAuth();
+    const { addNotification } = useNotifications();
     const navigate = useNavigate();
     const [problem, setProblem] = useState('');
     const [solution, setSolution] = useState('');
@@ -61,6 +63,15 @@ const Chat = () => {
                 submitted_problem: problem,
                 submitted_solution: solution
             };
+
+            if (addNotification) {
+                addNotification({
+                    title: 'Report Generated',
+                    message: `Your code analysis for ${language || 'your submission'} has been successfully completed!`,
+                    route: '/dashboard/reports'
+                });
+            }
+
             navigate('/dashboard/reports', { state: { data: enhancedData } });
         } catch (error) {
             console.error('Submission error:', error);

@@ -78,9 +78,6 @@ const Hero = () => {
                         <Link to="/auth" className="px-8 py-4 bg-accent text-primary font-bold rounded-xl hover:brightness-110 transition-all shadow-lg shadow-accent/20 inline-block text-center">
                             Get Started Free
                         </Link>
-                        <button className="px-8 py-4 border border-border text-text-primary font-bold rounded-xl hover:bg-text-primary/5 transition-all">
-                            View Demo
-                        </button>
                     </div>
                 </motion.div>
             </div>

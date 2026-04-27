@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Zap, FileCode, Activity, Eye, Calendar, Code, CheckCircle, AlertTriangle, XCircle, Terminal, Lightbulb, ChevronRight, FileDiff } from 'lucide-react';
+import { Zap, FileCode, Activity, Eye, Calendar, Code, CheckCircle, AlertTriangle, XCircle, Terminal, Lightbulb, ChevronRight, FileDiff, Search } from 'lucide-react';
 import { useReports } from '../../context/ReportContext';
 import { getIconByName, formatReportData } from '../../utils/reportUtils';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -8,8 +8,15 @@ const Reports = () => {
     const { reports, isLoading, addReport, refreshReports } = useReports(); // Added refreshReports
     const [selectedReportId, setSelectedReportId] = useState(null);
     const [activeTab, setActiveTab] = useState('source');
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, issues: [], tipBorder: '' });
+    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
+
+    const filteredReports = reports.filter(r =>
+        r.language?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     // 1. Synchronously Derive Local State on First Render
     // This runs BEFORE any useEffect, preventing the "Loading" flash.
@@ -57,15 +64,16 @@ const Reports = () => {
     }, [directData, addReport, navigate, location.pathname]);
 
     // 2. Determine which report to show
-    // Priority: Local Report -> Selected Report -> First Report
-    const displayReport = localReport || reports.find(r => r.id === selectedReportId) || reports[0];
+    // Priority: Synced Context Version of Local -> Local Report -> Selected Report -> First Filtered Report -> First Report
+    const contextVersionOfLocal = localReport ? reports.find(r => r.id === localReport.id) : null;
+    const displayReport = contextVersionOfLocal || localReport || reports.find(r => r.id === selectedReportId) || filteredReports[0] || reports[0];
 
     // Effect: If we don't have a local report, select the first one from context when it loads
     useEffect(() => {
-        if (!localReport && reports && reports.length > 0 && !selectedReportId) {
-            setSelectedReportId(reports[0].id);
+        if (!localReport && filteredReports && filteredReports.length > 0 && !selectedReportId) {
+            setSelectedReportId(filteredReports[0].id);
         }
-    }, [reports, selectedReportId, localReport]);
+    }, [filteredReports, selectedReportId, localReport]);
 
     // Handle sidebar click
     const handleReportClick = (id) => {
@@ -120,6 +128,45 @@ const Reports = () => {
     return (
         <div className="flex flex-col lg:flex-row h-full gap-6 overflow-hidden">
 
+            {/* Fixed-position global tooltip — escapes all overflow containers */}
+            {tooltip.visible && (
+                <div
+                    className={`fixed z-[9999] bg-[#1a2540] border ${tooltip.tipBorder} p-3 rounded-lg shadow-2xl text-xs w-max max-w-sm text-gray-200 pointer-events-none`}
+                    style={{ left: tooltip.x, top: tooltip.y }}
+                >
+                    {tooltip.issues.map((iss, i) => {
+                        const issSev = iss.severity?.toLowerCase() || 'minor';
+                        const issCrit = issSev === 'critical';
+                        const issMaj = issSev === 'major';
+                        const issMed = issSev === 'medium' || issSev === 'warning';
+                        const textColor = issCrit ? 'text-red-400' : issMaj ? 'text-orange-400' : issMed ? 'text-yellow-400' : 'text-blue-400';
+                        const s = iss.skill?.toLowerCase() || '';
+                        let sColor = 'text-gray-300 bg-black/30 border-white/5';
+                        if (s.includes('readability')) sColor = 'text-blue-300 bg-blue-500/20 border-blue-500/30';
+                        else if (s.includes('documentation')) sColor = 'text-purple-300 bg-purple-500/20 border-purple-500/30';
+                        else if (s.includes('efficiency')) sColor = 'text-teal-300 bg-teal-500/20 border-teal-500/30';
+                        else if (s.includes('problem')) sColor = 'text-orange-300 bg-orange-500/20 border-orange-500/30';
+                        else if (s.includes('edge')) sColor = 'text-red-300 bg-red-500/20 border-red-500/30';
+                        else if (s.includes('correctness')) sColor = 'text-green-300 bg-green-500/20 border-green-500/30';
+                        else if (s.includes('quality')) sColor = 'text-indigo-300 bg-indigo-500/20 border-indigo-500/30';
+                        return (
+                            <div key={i} className={i !== 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
+                                <div className="flex items-center flex-wrap gap-2 mb-1">
+                                    <span className={`font-bold tracking-wider uppercase ${textColor}`}>{iss.severity} ISSUE</span>
+                                    {iss.skill && (
+                                        <>
+                                            <span className="text-gray-500">•</span>
+                                            <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${sColor}`}>{iss.skill}</span>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="opacity-90 leading-relaxed font-sans">{iss.message}</div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
             {/* Left Sidebar - List */}
             <div className="w-full lg:w-1/3 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
                 <div>
@@ -127,8 +174,20 @@ const Reports = () => {
                     <p className="text-text-secondary text-sm">Your generated analysis reports</p>
                 </div>
 
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                    <input
+                        type="text"
+                        placeholder="Search your code reports"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-xl py-4 pl-12 pr-4 text-text-primary focus:border-accent outline-none placeholder:text-text-secondary/50 transition-all"
+                    />
+                </div>
+
                 <div className="space-y-4">
-                    {reports.map((report) => {
+                    {filteredReports.map((report) => {
                         const ReportIcon = getIconByName(report.iconName);
                         return (
                             <div
@@ -157,6 +216,11 @@ const Reports = () => {
                                                 <span className={`text-[10px] px-2 py-0.5 rounded-full border border-white/10 ${report.status === 'Excellent' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
                                                     {report.status}
                                                 </span>
+                                                {report.difficulty && (
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border border-white/10 ${report.difficulty.toLowerCase() === 'hard' ? 'bg-red-500/20 text-red-400' : report.difficulty.toLowerCase() === 'medium' ? 'bg-yellow-500/20 text-yellow-400' : report.difficulty.toLowerCase() === 'easy' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/70'}`}>
+                                                        {report.difficulty}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 text-xs text-text-secondary mt-1">
                                                 <span>{report.title}</span>
@@ -192,13 +256,19 @@ const Reports = () => {
                             <p className="text-white/80">{selectedReport.title}</p>
                             {selectedReport.sub_title && <p className="text-white/60 text-sm mt-1">{selectedReport.sub_title}</p>}
 
-                            <div className="flex gap-6 mt-6">
+                            <div className="flex flex-wrap gap-6 mt-6">
                                 <div className="flex items-center gap-2 text-sm font-medium">
                                     <Calendar className="w-4 h-4" /> {selectedReport.date}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm font-medium">
                                     <Code className="w-4 h-4" /> Score: {selectedReport.score}%
                                 </div>
+                                {selectedReport.difficulty && (
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                        <Activity className="w-4 h-4" /> 
+                                        Difficulty: <span className="capitalize bg-white/20 text-white px-2 py-0.5 rounded-md ml-1 font-semibold shadow-sm tracking-wide">{selectedReport.difficulty}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         {/* Circular Score or Visual */}
@@ -220,7 +290,7 @@ const Reports = () => {
                         <h3 className="text-text-primary font-bold mb-6">Code Quality</h3>
                         <div className="space-y-6">
                             <SkillBar label="Readability" percentage={selectedReport.metrics?.readability || 0} color="bg-blue-600" />
-                            <SkillBar label="Maintainability" percentage={selectedReport.metrics?.maintainability || 0} color="bg-purple" />
+                            <SkillBar label="Documentation" percentage={selectedReport.metrics?.documentation || 0} color="bg-purple" />
                             <SkillBar label="Efficiency" percentage={selectedReport.metrics?.efficiency || 0} color="bg-teal-600" />
                             <SkillBar label="Problem Solving" percentage={selectedReport.metrics?.problemSolving || 0} color="bg-orange-600" />
                             <SkillBar label="Edge Cases" percentage={selectedReport.metrics?.edgeCases || 0} color="bg-red-600" />
@@ -233,8 +303,9 @@ const Reports = () => {
                         <h3 className="text-text-primary font-bold mb-6">Issues Found</h3>
                         <div className="space-y-3 mb-6">
                             <IssueItem label="Critical" count={selectedReport.issues?.critical || 0} color="text-red-500" bg="bg-red-500/10" border="border-red-500/20" />
-                            <IssueItem label="Warnings" count={selectedReport.issues?.warnings || 0} color="text-yellow-500" bg="bg-yellow-500/10" border="border-yellow-500/20" />
-                            <IssueItem label="Suggestions" count={selectedReport.issues?.suggestions || 0} color="text-blue-500" bg="bg-blue-500/10" border="border-blue-500/20" />
+                            <IssueItem label="Major" count={selectedReport.issues?.major || 0} color="text-orange-500" bg="bg-orange-500/10" border="border-orange-500/20" />
+                            <IssueItem label="Medium" count={selectedReport.issues?.medium || 0} color="text-yellow-500" bg="bg-yellow-500/10" border="border-yellow-500/20" />
+                            <IssueItem label="Minor" count={selectedReport.issues?.minor || 0} color="text-blue-500" bg="bg-blue-500/10" border="border-blue-500/20" />
                         </div>
 
                         {/* Detailed Issues List */}
@@ -243,14 +314,18 @@ const Reports = () => {
                                 <h4 className="text-text-secondary text-sm font-semibold mb-3">Detailed Breakdown</h4>
                                 {selectedReport.issues.list.map((issue, idx) => {
                                     const severity = issue.severity?.toLowerCase() || 'minor';
-                                    const isCritical = severity === 'critical' || severity === 'major';
-                                    const isWarning = severity === 'warning' || severity === 'minor';
+                                    const isCritical = severity === 'critical';
+                                    const isMajor = severity === 'major';
+                                    const isMedium = severity === 'medium' || severity === 'warning';
 
-                                    const styles = isCritical
-                                        ? { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', badge: 'border-red-500/30' }
-                                        : isWarning
-                                            ? { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400', badge: 'border-yellow-500/30' }
-                                            : { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', badge: 'border-blue-500/30' };
+                                    let styles = { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', badge: 'border-blue-500/30' };
+                                    if (isCritical) {
+                                        styles = { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', badge: 'border-red-500/30' };
+                                    } else if (isMajor) {
+                                        styles = { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', badge: 'border-orange-500/30' };
+                                    } else if (isMedium) {
+                                        styles = { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400', badge: 'border-yellow-500/30' };
+                                    }
 
                                     return (
                                         <div key={idx} className={`p-4 rounded-xl border flex gap-3 ${styles.bg} ${styles.border}`}>
@@ -258,8 +333,28 @@ const Reports = () => {
                                                 Line {issue.line}
                                             </div>
                                             <div>
-                                                <p className="text-text-primary text-sm font-medium leading-snug">{issue.message}</p>
-                                                <span className="text-xs text-text-secondary capitalize mt-1 block opacity-70">{severity} Issue</span>
+                                                <p className="text-text-primary text-sm font-medium leading-snug mb-1.5">{issue.message}</p>
+                                                <div className="flex items-center flex-wrap gap-2">
+                                                    <span className="text-xs text-text-secondary capitalize opacity-70">{severity} Issue</span>
+                                                    {issue.skill && (() => {
+                                                        const s = issue.skill.toLowerCase();
+                                                        let sColor = 'text-gray-300 bg-gray-500/10 border-gray-500/20';
+                                                        if (s.includes('readability')) sColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+                                                        else if (s.includes('documentation')) sColor = 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+                                                        else if (s.includes('efficiency')) sColor = 'text-teal-400 bg-teal-500/10 border-teal-500/20';
+                                                        else if (s.includes('problem')) sColor = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+                                                        else if (s.includes('edge')) sColor = 'text-red-400 bg-red-500/10 border-red-500/20';
+                                                        else if (s.includes('correctness')) sColor = 'text-green-400 bg-green-500/10 border-green-500/20';
+                                                        else if (s.includes('quality')) sColor = 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
+                                                        
+                                                        return (
+                                                            <>
+                                                                <span className="text-xs text-text-secondary opacity-50">•</span>
+                                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${sColor} capitalize tracking-wide`}>{issue.skill}</span>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -341,29 +436,42 @@ const Reports = () => {
                                             const lineNum = idx + 1;
                                             const issues = errorLines[lineNum];
                                             if (issues && issues.length > 0) {
-                                                const issue = issues[0];
-                                                const severity = issue.severity?.toLowerCase() || 'minor';
-                                                const isCritical = severity === 'critical' || severity === 'major';
-                                                const isWarning = severity === 'warning' || severity === 'minor';
-                                                const bgClass = isCritical ? 'bg-red-500/20 shadow-[inset_4px_0_0_0_rgba(239,68,68,0.8)]' : isWarning ? 'bg-yellow-500/20 shadow-[inset_4px_0_0_0_rgba(234,179,8,0.8)]' : 'bg-blue-500/20 shadow-[inset_4px_0_0_0_rgba(59,130,246,0.8)]';
-                                                const tipBorder = isCritical ? 'border-red-500/50' : isWarning ? 'border-yellow-500/50' : 'border-blue-500/50';
+                                                const hasCritical = issues.some(iss => iss.severity?.toLowerCase() === 'critical');
+                                                const hasMajor = issues.some(iss => iss.severity?.toLowerCase() === 'major');
+                                                const hasMedium = issues.some(iss => iss.severity?.toLowerCase() === 'medium' || iss.severity?.toLowerCase() === 'warning');
+                                                
+                                                let bgClass = 'bg-blue-500/20 shadow-[inset_4px_0_0_0_rgba(59,130,246,0.8)]';
+                                                let tipBorder = 'border-blue-500/50';
+                                                
+                                                if (hasCritical) {
+                                                    bgClass = 'bg-red-500/20 shadow-[inset_4px_0_0_0_rgba(239,68,68,0.8)]';
+                                                    tipBorder = 'border-red-500/50';
+                                                } else if (hasMajor) {
+                                                    bgClass = 'bg-orange-500/20 shadow-[inset_4px_0_0_0_rgba(249,115,22,0.8)]';
+                                                    tipBorder = 'border-orange-500/50';
+                                                } else if (hasMedium) {
+                                                    bgClass = 'bg-yellow-500/20 shadow-[inset_4px_0_0_0_rgba(234,179,8,0.8)]';
+                                                    tipBorder = 'border-yellow-500/50';
+                                                }
 
                                                 return (
-                                                    <div key={idx} className={`group relative flex px-6 py-0.5 my-[1px] hover:bg-white/5 transition-colors ${bgClass}`}>
+                                                    <div
+                                                        key={idx}
+                                                        className={`group relative flex px-6 py-0.5 my-[1px] hover:bg-white/5 transition-colors cursor-pointer ${bgClass}`}
+                                                        onMouseEnter={(e) => {
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            setTooltip({
+                                                                visible: true,
+                                                                x: rect.left + 64,
+                                                                y: rect.bottom + 6,
+                                                                issues,
+                                                                tipBorder,
+                                                            });
+                                                        }}
+                                                        onMouseLeave={() => setTooltip(t => ({ ...t, visible: false }))}
+                                                    >
                                                         <div className="text-gray-500 select-none mr-4 w-8 text-right shrink-0 font-medium">{lineNum}</div>
                                                         <div className="flex-1 whitespace-pre">{lineText || ' '}</div>
-
-                                                        {/* Tooltip */}
-                                                        <div className={`absolute left-16 top-full mt-1 z-50 hidden group-hover:block bg-[#1a2540] border ${tipBorder} p-3 rounded-lg shadow-2xl text-xs w-max max-w-sm text-gray-200`}>
-                                                            {issues.map((iss, i) => (
-                                                                <div key={i} className={i !== 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
-                                                                    <div className={`font-bold mb-1 tracking-wider uppercase ${isCritical ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-blue-400'}`}>
-                                                                        {iss.severity} ISSUE
-                                                                    </div>
-                                                                    <div className="opacity-90 leading-relaxed font-sans">{iss.message}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
                                                     </div>
                                                 );
                                             }
@@ -424,19 +532,21 @@ const Reports = () => {
                 </div>
 
                 {/* Recommendations */}
-                <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
-                    <h3 className="text-text-primary font-bold mb-6">Recommendations</h3>
-                    <div className="space-y-3">
-                        {selectedReport.recommendations && selectedReport.recommendations.map((rec, index) => (
-                            <div key={index} className="p-4 bg-primary/50 border border-white/5 rounded-xl flex items-start gap-3 hover:border-white/10 transition-colors">
-                                <div className="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5">
-                                    {index + 1}
+                {selectedReport.recommendations && selectedReport.recommendations.length > 0 && (
+                    <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
+                        <h3 className="text-text-primary font-bold mb-6">Recommendations</h3>
+                        <div className="space-y-3">
+                            {selectedReport.recommendations.slice(0, 5).map((rec, index) => (
+                                <div key={index} className="p-4 bg-primary/50 border border-white/5 rounded-xl flex items-start gap-3 hover:border-white/10 transition-colors">
+                                    <div className="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5">
+                                        {index + 1}
+                                    </div>
+                                    <p className="text-sm text-text-secondary">{rec}</p>
                                 </div>
-                                <p className="text-sm text-text-secondary">{rec}</p>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
             </div>
         </div>

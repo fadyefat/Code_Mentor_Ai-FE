@@ -1,9 +1,10 @@
 import React from 'react';
 import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Map, FileText, Settings, Plus, LogOut, Bell, Search, Menu, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Map, FileText, Settings, Plus, LogOut, Bell, Menu, Loader2 } from 'lucide-react';
 // Minimal avatar placeholder or icon
 import { User } from 'lucide-react';
 import { useReports } from '../context/ReportContext';
+import { useNotifications } from '../context/NotificationContext';
 import { supabase } from '../lib/supabaseClient';
 
 import { useAuth } from '../context/AuthContext';
@@ -12,12 +13,14 @@ const DashboardLayout = () => {
     const [showNotifications, setShowNotifications] = React.useState(false);
     const { user, signOut, loading: authLoading } = useAuth();
     const { isLoading } = useReports();
+    const { pushEnabled, notifications, unreadCount, markAllAsRead } = useNotifications();
     const navigate = useNavigate();
 
-    // Remove the explicit localStorage read inside useEffect
-    // The AuthContext handles state now
-
-    // Remove unused effect
+    React.useEffect(() => {
+        if (!authLoading && !user) {
+            navigate('/login', { replace: true });
+        }
+    }, [user, authLoading, navigate]);
 
     const handleSignOut = async (e) => {
         e.preventDefault();
@@ -38,22 +41,17 @@ const DashboardLayout = () => {
         );
     }
 
-    const notifications = [
-        { id: 1, title: 'New Review', message: 'Your Python script has been reviewed.', time: '2m ago' },
-        { id: 2, title: 'Streak!', message: 'You reached a 7-day streak!', time: '1h ago' },
-        { id: 3, title: 'Welcome', message: 'Welcome to CodeMentor AI Pro.', time: '1d ago' },
-    ];
+    if (!user) return null;
 
     return (
         <div className="flex h-screen bg-primary text-text-primary overflow-hidden">
 
             {/* Sidebar */}
             <aside className="w-64 bg-secondary border-r border-white/5 flex flex-col hidden md:flex">
-                <div className="p-6 border-b border-white/5">
-                    {/* Logo - User requested "Do Nothing" if logged in */}
-                    <div className="cursor-default select-none">
-                        <h1 className="text-xl font-bold text-accent">CodeMentor AI</h1>
-                    </div>
+                <div className="p-2 border-b border-white/5 overflow-hidden flex items-center justify-center">
+                    <Link to="/dashboard" className="block select-none hover:opacity-80 transition-opacity w-full flex justify-center">
+                        <img src="/logo.png" alt="CodeMentor AI" className="w-[180px] h-auto object-contain transform scale-[1.7] origin-center" />
+                    </Link>
                 </div>
 
                 <div className="p-4">
@@ -87,13 +85,15 @@ const DashboardLayout = () => {
                         </div>
 
                         {/* Logout Tooltip/Menu (Simple) */}
-                        <div className="absolute bottom-full left-0 w-full bg-secondary border border-white/10 rounded-lg p-2 mb-2 hidden group-hover:block z-50">
-                            <button
-                                onClick={handleSignOut}
-                                className="w-full text-left text-sm p-2 hover:bg-white/5 rounded text-red-400 flex items-center gap-2"
-                            >
-                                <LogOut className="w-4 h-4" /> Sign Out
-                            </button>
+                        <div className="absolute bottom-full left-0 w-full pb-2 hidden group-hover:block z-50">
+                            <div className="bg-secondary border border-white/10 rounded-lg p-2 shadow-xl">
+                                <button
+                                    onClick={handleSignOut}
+                                    className="w-full text-left text-sm p-2 hover:bg-white/5 rounded text-red-400 flex items-center gap-2"
+                                >
+                                    <LogOut className="w-4 h-4" /> Sign Out
+                                </button>
+                            </div>
                         </div>
                     </NavLink>
                 </div>
@@ -108,50 +108,47 @@ const DashboardLayout = () => {
                         <Menu className="w-6 h-6" />
                     </button>
 
-                    <div className="relative w-96 hidden md:block">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="w-full bg-primary border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-4 relative">
-                        <button
-                            onClick={() => setShowNotifications(!showNotifications)}
-                            className="relative p-2 hover:bg-white/5 rounded-full transition-colors"
-                        >
-                            <Bell className="w-5 h-5 text-text-secondary" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        </button>
+                    <div className="flex items-center gap-4 relative ml-auto">
+                        {pushEnabled && (
+                            <button
+                                onClick={() => {
+                                    setShowNotifications(!showNotifications);
+                                    if (!showNotifications) markAllAsRead();
+                                }}
+                                className="relative p-2 hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-accent animate-bounce' : 'text-text-secondary'}`} />
+                                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_#ef4444]"></span>}
+                            </button>
+                        )}
 
                         {/* Notifications Dropdown */}
-                        {showNotifications && (
+                        {showNotifications && pushEnabled && (
                             <div className="absolute top-full right-0 mt-2 w-80 bg-secondary border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                                 <div className="p-4 border-b border-border flex justify-between items-center">
                                     <h3 className="font-bold text-text-primary">Notifications</h3>
-                                    <span className="text-xs text-accent cursor-pointer hover:underline">Mark all read</span>
                                 </div>
-                                <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                                    {notifications.map(notif => (
-                                        <div key={notif.id} className="p-4 border-b border-border hover:bg-white/5 transition-colors cursor-pointer">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h4 className="text-sm font-semibold text-text-primary">{notif.title}</h4>
-                                                <span className="text-[10px] text-text-secondary">{notif.time}</span>
-                                            </div>
-                                            <p className="text-xs text-text-secondary line-clamp-2">{notif.message}</p>
+                                <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                                    {notifications.length === 0 ? (
+                                        <div className="p-6 text-center text-sm text-text-secondary">
+                                            No new notifications
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="p-3 text-center border-t border-white/10">
-                                    <NavLink
-                                        to="/dashboard/reports"
-                                        onClick={() => setShowNotifications(false)}
-                                        className="inline-block text-xs text-text-primary border border-border rounded-lg px-4 py-2 hover:bg-text-primary/5 hover:underline transition-colors"
-                                    >
-                                        View All Activity
-                                    </NavLink>
+                                    ) : (
+                                        notifications.map(notif => (
+                                            <NavLink 
+                                                to={notif.route} 
+                                                key={notif.id} 
+                                                onClick={() => setShowNotifications(false)}
+                                                className={`block p-4 border-b border-border hover:bg-white/5 transition-colors cursor-pointer ${notif.read ? 'opacity-70' : 'bg-primary/30'}`}
+                                            >
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h4 className="text-sm font-semibold text-text-primary">{notif.title}</h4>
+                                                    <span className="text-[10px] text-text-secondary">{notif.time}</span>
+                                                </div>
+                                                <p className="text-xs text-text-secondary line-clamp-2">{notif.message}</p>
+                                            </NavLink>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}
