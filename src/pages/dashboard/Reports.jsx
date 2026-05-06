@@ -55,13 +55,20 @@ const Reports = () => {
         if (directData && !processedDirectDataRef.current) {
             processedDirectDataRef.current = true;
             console.log("Reports: Persisting direct data...");
-            addReport(directData);
+            
+            const syncWithDB = async () => {
+                await addReport(directData);
+                await refreshReports();
+                setLocalReport(null); // Force UI to snap to the clean DB row
+            };
+            syncWithDB();
+
             // Clear location state through React Router so it doesn't trigger again
             navigate(location.pathname, { replace: true, state: {} });
         } else if (!directData) {
             processedDirectDataRef.current = false;
         }
-    }, [directData, addReport, navigate, location.pathname]);
+    }, [directData, addReport, refreshReports, navigate, location.pathname]);
 
     // 2. Determine which report to show
     // Priority: Synced Context Version of Local -> Local Report -> Selected Report -> First Filtered Report -> First Report
@@ -414,9 +421,14 @@ const Reports = () => {
                         <div className="p-0 overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar bg-[#0f172a]">
                             <div className="text-sm font-mono text-gray-100 leading-relaxed selection:bg-accent/30 py-4 w-fit min-w-full">
                                 {(() => {
-                                    const rawCode = activeTab === 'source' ? selectedReport.snippet :
-                                        activeTab === 'suggested' ? (selectedReport.diff_view || selectedReport.suggested_solution) :
+                                    let rawCode = activeTab === 'source' ? selectedReport.snippet :
+                                        activeTab === 'suggested' ? (selectedReport.suggested_solution || selectedReport.diff_view) :
                                             selectedReport.problem_desc;
+
+                                    // Force remove any AI hallucinated markers like $(1), $(2), $(3)
+                                    if (activeTab === 'suggested' && rawCode) {
+                                        rawCode = String(rawCode).replace(/\$\(\d+\)\s*/g, '');
+                                    }
 
                                     if (!rawCode) return <div className="px-6 text-gray-500 italic">No content available</div>;
 
