@@ -249,6 +249,7 @@ const Reports = () => {
                     })}
                 </div>
             </div>
+            )}
 
             {/* Right Content - Detail View */}
             {!showList && selectedReport && (
