@@ -120,40 +120,7 @@ export const formatReportData = (apiResponse) => {
         // We'll update UI to use 'metrics'.
 
         issues: (() => {
-            // Gather all raw issues from the main array
-            const rawIssues = [...(apiResponse.issues || [])];
-            
-            // Sweep the feedback object to find hidden issues (hallucinated by AI)
-            if (apiResponse.feedback && typeof apiResponse.feedback === 'object') {
-                for (const [skillName, skillData] of Object.entries(apiResponse.feedback)) {
-                    if (skillData && Array.isArray(skillData.issues)) {
-                        skillData.issues.forEach(fbIssue => {
-                            // Prevent duplicates
-                            const isDuplicate = rawIssues.some(r => 
-                                r.message === fbIssue.message || 
-                                (r.line == fbIssue.line && r.severity === fbIssue.severity && r.message?.substring(0,10) === fbIssue.message?.substring(0,10))
-                            );
-                            if (!isDuplicate) {
-                                rawIssues.push({
-                                    ...fbIssue,
-                                    feedback_type: fbIssue.feedback_type || skillName,
-                                    line: fbIssue.line || 'General'
-                                });
-                            } else {
-                                const existingIndex = rawIssues.findIndex(r => 
-                                    r.message === fbIssue.message || 
-                                    (r.line == fbIssue.line && r.severity === fbIssue.severity && r.message?.substring(0,10) === fbIssue.message?.substring(0,10))
-                                );
-                                if (existingIndex >= 0) {
-                                    rawIssues[existingIndex].feedback_type = fbIssue.feedback_type || skillName;
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-
-            const list = rawIssues.map(issue => {
+            const list = (apiResponse.issues || []).map(issue => {
                 let foundSkill = issue.feedback_type || issue.skill || issue.category || issue.type || issue.metric || issue.affected_metric || issue.associated_skill || issue.related_skill || issue.code_quality || '';
                 
                 if (!foundSkill || foundSkill.toLowerCase() === 'syntax error') {
@@ -185,33 +152,6 @@ export const formatReportData = (apiResponse) => {
                     skill: foundSkill || 'Code Quality'
                 };
             });
-
-            // Post-process: ensure missing skills with <100 scores get at least one issue.
-            const metrics = {
-                'Readability': apiResponse.metrics?.readability ?? apiResponse.readability ?? 100,
-                'Documentation': apiResponse.metrics?.documentation ?? apiResponse.maintainability ?? 100,
-                'Efficiency': apiResponse.metrics?.efficiency ?? apiResponse.efficiency ?? 100,
-                'Problem-Solving Approach': apiResponse.metrics?.problemSolving ?? apiResponse.problem_solving ?? 100,
-                'Edge Cases Handling': apiResponse.metrics?.edgeCases ?? apiResponse.edge_cases_handling ?? 100,
-                'Correctness': apiResponse.metrics?.correctness ?? apiResponse.correctness ?? 100
-            };
-
-            for (const [skillName, score] of Object.entries(metrics)) {
-                if (Number(score) < 100) {
-                    const hasIssue = list.some(i => i.skill.toLowerCase().includes(skillName.toLowerCase().split('-')[0].split(' ')[0]));
-                    if (!hasIssue) {
-                        // Find an issue that is "over-represented" (e.g., we have 3 problem-solving issues but only need 1)
-                        const candidate = list.find(i => {
-                            const skillCount = list.filter(other => other.skill === i.skill).length;
-                            return skillCount > 1; // It's a duplicate skill, we can safely steal it!
-                        });
-
-                        if (candidate) {
-                            candidate.skill = skillName;
-                        }
-                    }
-                }
-            }
 
             let criticalCount = 0;
             let majorCount = 0;
