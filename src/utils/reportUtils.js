@@ -121,7 +121,7 @@ export const formatReportData = (apiResponse) => {
 
         issues: (() => {
             const list = (apiResponse.issues || []).map(issue => {
-                let foundSkill = issue.skill || issue.category || issue.type || issue.metric || issue.affected_metric || issue.associated_skill || issue.related_skill || issue.code_quality || '';
+                let foundSkill = issue.feedback_type || issue.skill || issue.category || issue.type || issue.metric || issue.affected_metric || issue.associated_skill || issue.related_skill || issue.code_quality || '';
                 
                 if (!foundSkill || foundSkill.toLowerCase() === 'syntax error') {
                     // Deep scan object values for any of the known skill names
