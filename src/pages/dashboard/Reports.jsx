@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Zap, FileCode, Activity, Eye, Calendar, Code, CheckCircle, AlertTriangle, XCircle, Terminal, Lightbulb, ChevronRight, FileDiff, Search } from 'lucide-react';
+import { Zap, FileCode, Activity, Eye, Calendar, Code, CheckCircle, AlertTriangle, XCircle, Terminal, Lightbulb, ChevronRight, ChevronLeft, FileDiff, Search } from 'lucide-react';
 import { useReports } from '../../context/ReportContext';
 import { getIconByName, formatReportData } from '../../utils/reportUtils';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -10,8 +10,9 @@ const Reports = () => {
     const [activeTab, setActiveTab] = useState('source');
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, issues: [], tipBorder: '' });
     const [searchQuery, setSearchQuery] = useState('');
-    const navigate = useNavigate();
     const location = useLocation();
+    const [showList, setShowList] = useState(!location.state?.data);
+    const navigate = useNavigate();
 
     const filteredReports = reports.filter(r =>
         r.language?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,6 +88,7 @@ const Reports = () => {
         console.log("Reports: Sidebar clicked, switching to report ID:", id);
         setLocalReport(null); // Clear the direct view to switch to history mode
         setSelectedReportId(id);
+        setShowList(false);
     };
 
     // 3. Loading Logic - BYPASS if we have local data!
@@ -175,8 +177,9 @@ const Reports = () => {
             )}
 
             {/* Left Sidebar - List */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
-                <div>
+            {showList && (
+                <div className="w-full flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+                    <div>
                     <h2 className="text-2xl font-bold text-text-primary mb-1">Code Reviews</h2>
                     <p className="text-text-secondary text-sm">Your generated analysis reports</p>
                 </div>
@@ -248,10 +251,18 @@ const Reports = () => {
             </div>
 
             {/* Right Content - Detail View */}
-            <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar pb-10">
+            {!showList && selectedReport && (
+                <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar pb-10">
+                    <button 
+                        onClick={() => setShowList(true)}
+                        className="flex items-center gap-2 text-text-secondary hover:text-white transition-colors w-fit -mb-2"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                        <span>Back to Reports</span>
+                    </button>
 
-                {/* Header Card */}
-                <div className={`rounded-3xl bg-gradient-to-r ${selectedReport.color} p-10 min-h-[240px] flex flex-col justify-center text-white shadow-lg relative overflow-hidden`}>
+                    {/* Header Card */}
+                    <div className={`rounded-3xl bg-gradient-to-r ${selectedReport.color} p-10 min-h-[240px] flex flex-col justify-center text-white shadow-lg relative overflow-hidden`}>
                     <div className="relative z-10 flex justify-between items-start">
                         <div>
                             <div className="flex items-center gap-3 mb-2">
@@ -559,8 +570,8 @@ const Reports = () => {
                         </div>
                     </div>
                 )}
-
-            </div>
+                </div>
+            )}
         </div>
     );
 };
