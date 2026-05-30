@@ -251,14 +251,6 @@ const Profile = () => {
                     </div>
                 </div>
 
-                <div className="absolute top-1/2 right-10 -translate-y-1/2 flex gap-3">
-                    <button 
-                        onClick={handleEditClick}
-                        className="px-6 py-2 border border-border bg-secondary text-text-primary font-medium rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                        Edit Profile
-                    </button>
-                </div>
             </div>
 
             {/* Stats Grid - Moved here from Home.jsx */}
