@@ -1,61 +1,124 @@
-# Code Mentor AI: Deliverables and Evaluation
+# 🚀 Code Mentor AI - Intelligent Autonomous Code Reviewer
 
-This document outlines the core deliverables and evaluation criteria for the **Code Mentor AI** platform, a React-based application designed to provide automated, AI-driven code reviews.
+Code Mentor AI is a state-of-the-art platform designed to bridge the gap between junior developers and expert-level mentorship. Built with a modern tech stack and powered by Large Language Models (LLMs), it provides instantaneous, structured, and actionable feedback on code snippets across multiple programming languages.
 
-## 1. Introduction
-- **Problem Statement**: Junior developers frequently write code that, while functional, may be inefficient, poorly documented, or lacking edge-case handling. Immediate, expert-level code review is a scarce resource, often slowing down the learning curve.
-- **Objectives**: The project aims to build a smart, autonomous "Code Mentor" platform. By submitting code snippets, users instantly receive a structured evaluation powered by a Large Language Model (LLM). The AI grades the code across critical software engineering metrics (Readability, Efficiency, Problem Solving, Correctness, and Edge Cases) and provides an optimal solution.
-- **Scope**: The current scope covers a fully functional React frontend integrated with a Supabase backend. The platform includes secure user authentication, an AI code submission interface, detailed generated reports with syntax-highlighted code diffs, and a persistent user profile tracking learning streaks and mastered programming languages.
+---
 
-## 2. User Manual
-Operating the Code Mentor AI platform is designed to be intuitive:
-1. **Authentication (Login/Signup)**: 
-   - Users must authenticate via the Supabase Auth portal to access the dashboard, ensuring their reports are kept private.
-2. **Submitting Code for Review (`Submit.jsx`)**: 
-   - Navigate to the "Submit" section.
-   - Select the target programming language from the dropdown menu (e.g., C++, Python, JavaScript).
-   - Paste the problem description into the designated text area.
-   - Paste the code solution into the editor area.
-   - Click **"Analyze Code"**. The system will display a loading state while communicating securely with the backend AI.
-   `[PLACEHOLDER FOR STUDENT: Insert Screenshot of the Submit Form with code pasted inside]`
-3. **Reviewing the Analysis (`Reports.jsx`)**:
-   - Upon completion, the platform automatically redirects to the "Reports" page.
-   - The user views an overall score out of 100, categorized by status (e.g., "Excellent", "Needs Improvement").
-   - A visual breakdown of metrics (Efficiency, Readability, etc.) is displayed using graphical charts.
-   - A detailed list of detected issues (Critical, Major, Minor) is provided.
-   - A Diff View shows a side-by-side comparison of the user's original code against the AI's optimized solution.
-   `[PLACEHOLDER FOR STUDENT: Insert Screenshot of the generated Report including charts and the Diff View]`
-4. **Tracking Progress (`Profile.jsx`)**:
-   - The user can navigate to the Profile tab to view their aggregated statistics, including total projects reviewed, continuous learning streaks, and newly unlocked achievements based on their submission history.
+## ✨ Features
 
-## 3. Testing
-To ensure platform stability and prevent frontend crashes due to unpredictable AI outputs or network issues, several rigorous testing implementations were integrated directly into the codebase:
-- **Resilient AI Parsing (`reportUtils.js`)**: 
-  - Generative AI models can occasionally alter the naming conventions of JSON keys. We implemented defensive data extraction. For example, to extract the "Problem Solving" score, the utility checks multiple possible keys: `apiResponse['problem_solving']`, `apiResponse['problemSolving']`, and `apiResponse['logic']`. If none are found, it safely defaults to `0` without throwing a fatal JavaScript error.
-- **API Retry Mechanism (`apiRetry.js`)**: 
-  - Calling external AI APIs occasionally results in rate limits (HTTP 429) or temporary server timeouts. We developed a custom `fetchWithRetry` wrapper that uses Exponential Backoff (retrying after 2 seconds, then 4 seconds, etc.) to silently attempt the request again before displaying an error to the user.
-- **Protected Routes**: 
-  - Using `AuthContext`, the application was tested to ensure that unauthenticated users attempting to access the dashboard are immediately redirected to the login page.
+- **🤖 AI-Powered Analysis**: Instant grading across critical metrics: Readability, Efficiency, Problem Solving, Correctness, and Edge Cases.
+- **🔄 Side-by-Side Diff View**: Compare your original code with AI-optimized solutions in a clear, highlighted comparison.
+- **📊 Interactive Visualization**: Deep-dive into your code's quality with beautiful Radar charts and metric breakdowns powered by Recharts.
+- **🛤️ Educational Roadmaps**: Generate personalized learning paths and resources tailored to your skill level and target topics.
+- **💬 Real-time AI Chat**: Interact with your "Code Mentor" to ask follow-up questions or clarify complex technical concepts.
+- **🔥 Progress Tracking**: Gamified experience with learning streaks, mastered language badges, and comprehensive history.
+- **🛡️ Resilient Engineering**: Built-in exponential backoff and defensive parsing to handle AI API variability.
 
-## 4. Evaluation (User experiment)
-To accurately evaluate the effectiveness and reliability of the AI Code Mentor, three distinct real-world coding scenarios were tested. Users submitted deliberately flawed code to observe the system's analytical capabilities across different metrics.
+---
 
-### Scenario 1: Testing Algorithmic Efficiency (Python)
-- **User Submission:** A developer submitted a solution to the classic "Two-Sum" problem utilizing a brute-force approach with nested loops, resulting in an O(N²) time complexity.
-- **Expected Outcome:** The AI mentor should identify the poor time complexity and recommend a more optimal approach.
-- **System Result:** The platform successfully dropped the "Efficiency" metric to 30%. It flagged the nested loops as a "Major Issue" in the dashboard and provided a Diff View demonstrating how to use a Hash Map (Dictionary) to achieve an optimal O(N) time complexity.
+## 🛠️ Technology Stack
 
-### Scenario 2: Testing Edge Case Handling (JavaScript)
-- **User Submission:** A user submitted a math utility function that divides two numbers (`a / b`) but completely lacked validation or guard clauses for division by zero.
-- **Expected Outcome:** The system must catch the lack of defensive programming.
-- **System Result:** The AI dropped the "Edge Cases" metric to 20%. It generated a "Critical Issue" warning regarding potential `Infinity` or `NaN` errors, and the optimized code snippet included an explicit `if (b === 0) throw new Error(...)` validation check.
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, React Router DOM |
+| **Styling** | Tailwind CSS, Framer Motion (Animations), Lucide React (Icons) |
+| **Data Viz** | Recharts (Radar & Line Charts) |
+| **Backend** | Supabase Edge Functions (Serverless API) |
+| **Database** | Supabase PostgreSQL |
+| **Auth** | Supabase Auth (JWT-based) |
+| **AI Engine** | Hugging Face LLM API |
 
-### Scenario 3: Testing Readability and Clean Code (C++)
-- **User Submission:** A functional but highly unreadable script using obscure, single-letter variables (e.g., `int x, y;` instead of `int width, height;`) with absolutely no inline comments.
-- **Expected Outcome:** The mentor should focus purely on maintainability rather than logic.
-- **System Result:** While the "Correctness" score remained high (95%), the AI heavily penalized the "Readability" and "Documentation" metrics. It flagged the variable naming as a "Minor Issue" and generated a revised version adhering to standard camelCase conventions with descriptive inline comments added. 
+---
 
-**Overall Conclusion:** Across all scenarios, the average server processing time was approximately 6-8 seconds. The experiments proved that the system does not just compile code, but deeply understands syntax, time complexity, and clean code architectures.
+## 🚀 Getting Started
 
-## 5. Summary
-The **Code Mentor AI** project effectively bridges the gap between novice programmers and expert-level code reviews. By combining a highly responsive React frontend with a secure, serverless Supabase backend, the platform delivers instantaneous, actionable feedback. The defensive coding strategies employed—such as the robust `reportUtils.js` parser and exponential network backoff—guarantee a stable user experience. Ultimately, the system serves as a highly reliable, 24/7 educational tool that accelerates developer growth and enforces modern coding best practices.
+Follow these instructions to get a copy of the project up and running on your local machine.
+
+### 📋 Prerequisites
+
+- **Node.js**: Version 18.0.0 or higher
+- **npm** (or yarn/pnpm)
+
+### 🔧 Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/fadyefat/Code_Mentor_Ai-FE.git
+   ```
+
+2. **Navigate to the project directory:**
+   ```bash
+   cd Code_Mentor_Ai-FE-main
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+### 💻 Running Locally
+
+To start the development server:
+```bash
+npm run dev
+```
+The application will be available at `http://localhost:5173`.
+
+### 🏗️ Building for Production
+
+To create an optimized production build:
+```bash
+npm run build
+```
+The output will be in the `dist/` directory.
+
+---
+
+## 🏗️ Architecture Overview
+
+The system follows a **Serverless Decoupled Architecture**:
+
+1.  **Client (Presentation)**: A robust React SPA that handles complex state and animations.
+2.  **API Gateway (Logic)**: Supabase Edge Functions serve as a secure proxy, shielding sensitive AI API keys and handling the heavy lifting of prompt engineering.
+3.  **Persistence (Storage)**: PostgreSQL stores user submissions and profiles, ensuring a consistent experience across sessions.
+
+```mermaid
+graph TD
+    User[User Browser] <--> React[React Frontend]
+    React <--> Edge[Supabase Edge Functions]
+    Edge <--> AI[Hugging Face AI Model]
+    Edge <--> DB[(PostgreSQL Database)]
+```
+
+---
+
+## 📁 Project Structure
+
+```text
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── context/        # Auth, Notification, and Report Contexts
+│   ├── pages/          # Page layouts (Auth, Dashboard, Profile, etc.)
+│   ├── services/       # API interaction logic
+│   ├── utils/          # Formatting and Resiliency helpers
+│   └── assets/         # Static images and styles
+├── public/             # Static public assets
+├── vite.config.js      # Build configuration
+└── tailwind.config.js  # Styling configuration
+```
+
+---
+
+## 🛡️ Security & Resiliency
+
+- **API Protection**: All AI calls are proxied through Supabase Edge Functions to prevent exposure of API keys.
+- **Retry Mechanism**: Implements `fetchWithRetry` using exponential backoff to handle network flickers and API rate limits.
+- **Row Level Security (RLS)**: User data is strictly isolated at the database level.
+
+---
+
+## 📄 License
+
+This project was developed as part of a Graduation Project. All rights reserved.
+
+Developed with ❤️ by the **Code Mentor AI Team**.

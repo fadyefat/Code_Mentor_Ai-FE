@@ -548,7 +548,7 @@ const Reports = () => {
                     <div className="bg-secondary/50 backdrop-blur border border-border rounded-2xl p-6">
                         <h3 className="text-text-primary font-bold mb-6">Recommendations</h3>
                         <div className="space-y-3">
-                            {selectedReport.recommendations.slice(0, 5).map((rec, index) => (
+                            {selectedReport.recommendations.map((rec, index) => (
                                 <div key={index} className="p-4 bg-primary/50 border border-white/5 rounded-xl flex items-start gap-3 hover:border-white/10 transition-colors">
                                     <div className="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5">
                                         {index + 1}
